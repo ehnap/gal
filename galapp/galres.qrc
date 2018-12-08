@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="scrollbarstyle.qss">res/scrollbarstyle.qss</file>
+        <file alias="logo.png">res/logo.png</file>
+        <file alias="py.data">res/py.data</file>
+    </qresource>
+</RCC>
