@@ -1,1 +1,11 @@
 galapp/gal.pro.*
+galapp/.vs/
+galapp/.qmake.stash
+galapp/GeneratedFiles/
+galapp/debug/
+galapp/gal.vcxproj
+galapp/gal.vcxproj.*
+galapp/release/
+galapp/x64/
+*.sln
+.vs/

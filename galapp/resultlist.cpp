@@ -4,9 +4,11 @@
 #include <QTimer>
 #include <QFile>
 #include <QScrollBar>
+#include <QStandardItemModel>
 
 ResultListWidget::ResultListWidget(QWidget* parent/*= Q_NULLPTR*/)
 	: QListWidget(parent)
+	, m_loadPoint(0)
 {
 	setMouseTracking(true);
 	setFrameStyle(NoFrame);
@@ -17,7 +19,10 @@ ResultListWidget::ResultListWidget(QWidget* parent/*= Q_NULLPTR*/)
 	setItemDelegate(new ResultItemDelegate(this));
 	connect(this, &ResultListWidget::itemDoubleClicked, this, &ResultListWidget::onItemDoubleClicked);
 	connect(this, &ResultListWidget::itemEntered, this, &ResultListWidget::onItemEntered);
+	connect(this, &ResultListWidget::currentRowChanged, this, &ResultListWidget::onCurrentRowChanged);
 	QTimer::singleShot(0, this, &ResultListWidget::firstInit);
+	m_delayTimer = new QTimer(this);
+	connect(m_delayTimer, &QTimer::timeout, this, &ResultListWidget::onDelayShow);
 }
 
 ResultListWidget::~ResultListWidget()
@@ -55,16 +60,12 @@ void ResultListWidget::clear()
 void ResultListWidget::setResult(const ResultSet& r)
 {
 	clear();
-	foreach(const Data& result, r)
-	{
-		addItem(new ResultItem(this, result));
-	}
+	m_tempResult = r;
+	
+	load();
 
 	if (count() > 0)
-	{
-		show();
-		setCurrentRow(0);
-	}
+		delayShow();
 	else
 		hide();
 
@@ -73,10 +74,19 @@ void ResultListWidget::setResult(const ResultSet& r)
 	update();
 }
 
+void ResultListWidget::delayShow()
+{
+	m_delayTimer->stop();
+	m_delayTimer->start(6);
+}
+
 QSize ResultListWidget::sizeHint() const
 {
 	int c = count() > 6 ? 6 : count();
-	return QSize(width(), c * item(0)->sizeHint().height());
+	int h = 1;
+	if (item(0))
+		h = c * item(0)->sizeHint().height();
+	return QSize(width(), h);
 }
 
 void ResultListWidget::onItemDoubleClicked(QListWidgetItem* item)
@@ -94,11 +104,69 @@ void ResultListWidget::onItemEntered(QListWidgetItem* item)
 	setCurrentItem(item);
 }
 
+void ResultListWidget::onCurrentRowChanged(int currentRow)
+{
+	if (currentRow - m_loadPoint > 6)
+	{
+		load();
+		m_loadPoint = currentRow;
+	}
+}
+
+void ResultListWidget::onDelayShow()
+{
+	if (count() > 0)
+	{
+		m_delayTimer->stop();
+		show();
+		setCurrentRow(0);
+		m_loadPoint = 0;
+	}
+	
+	updateGeometry();
+	parentWidget()->adjustSize();
+	update();
+}
+
+void ResultListWidget::onSliderMove()
+{
+	load();
+}
+
 void ResultListWidget::firstInit()
 {
 	QFile f(":/scrollbarstyle.qss");
 	f.open(QFile::ReadOnly);
 	verticalScrollBar()->setStyleSheet(f.readAll());
+	QScrollBar* pScrollbar = verticalScrollBar();
+	connect(pScrollbar, &QScrollBar::sliderPressed, this, &ResultListWidget::onSliderMove);
+	connect(pScrollbar, &QScrollBar::sliderMoved, this, &ResultListWidget::onSliderMove);
+}
+
+void ResultListWidget::load()
+{
+	int i = 0;
+	if (m_tempResult.count() <= 12)
+	{
+		loadAll();
+	}
+	else
+	{
+		while (i++ < 6 * 2)
+		{
+			Data d = m_tempResult.takeFirst();
+			addItem(new ResultItem(this, d));
+		}
+	}
+}
+
+void ResultListWidget::loadAll()
+{
+	foreach(const Data& result, m_tempResult)
+	{
+		addItem(new ResultItem(this, result));
+ 	}
+	m_tempResult.clear();
 }
 
 ResultItem::ResultItem(QListWidget* parent, const Data& data)

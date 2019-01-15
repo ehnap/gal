@@ -35,7 +35,7 @@ class ResultListWidget : public QListWidget
 	Q_OBJECT
 
 public:
-	ResultListWidget(QWidget *parent = Q_NULLPTR);
+	ResultListWidget(QWidget* parent = Q_NULLPTR);
 	~ResultListWidget();
 
 	void next();
@@ -44,6 +44,7 @@ public:
 
 	void clear();
 	void setResult(const ResultSet& r);
+	void delayShow();
 
 protected:
 	QSize sizeHint() const override;
@@ -51,5 +52,17 @@ protected:
 protected slots:
 	void onItemDoubleClicked(QListWidgetItem* item);
 	void onItemEntered(QListWidgetItem* item);
+	void onCurrentRowChanged(int currentRow);
+	void onDelayShow();
+	void onSliderMove();
 	void firstInit();
+
+private:
+	void load();
+	void loadAll();
+
+private:
+	ResultSet m_tempResult;
+	int m_loadPoint;
+	QTimer* m_delayTimer;
 };
