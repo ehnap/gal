@@ -1,16 +1,26 @@
 #include "data.h"
 #include "pydata.h"
+#include "resultlist.h"
+#include "Everything.h"
 #include <QTimer>
 #include <QDir>
+#include <QThread>
 #include <QFileInfo>
 #include <QtWidgets/QFileIconProvider>
-#include "QProcess"
+#include <QProcess>
+#include <QMutex>
+
+namespace {
+	QMutex queryMutex;
+}
 
 Data::Data(const QString& id, 
-	const QString& name, 
+	const QString& displayName,
+	const QString& name,
 	const QString& path, 
 	const QIcon& icon)
 	: m_id(id)
+	, m_displayName(displayName)
 	, m_name(name)
 	, m_path(path)
 	, m_icon(icon)
@@ -20,11 +30,31 @@ Data::Data(const QString& id,
 
 Data::Data()
 	: m_id("")
+	, m_displayName("")
 	, m_name("")
 	, m_path("")
-	, m_icon("")
+	, m_icon(QIcon())
 {
 
+}
+
+Data::Data(const Data& other)
+{
+	m_icon = other.m_icon;
+	m_id = other.m_id;
+	m_name = other.m_name;
+	m_path = other.m_path;
+	m_displayName = other.m_displayName;
+}
+
+Data& Data::operator=(const Data& other)
+{
+	m_path = other.m_path;
+	m_id = other.m_id;
+	m_name = other.m_name;
+	m_icon = other.m_icon;
+	m_displayName = other.m_displayName;
+	return *this;
 }
 
 Data::~Data()
@@ -34,6 +64,11 @@ Data::~Data()
 QString Data::name() const
 {
 	return m_name;
+}
+
+QString Data::displayName() const
+{
+	return m_displayName;
 }
 
 QString Data::path() const
@@ -49,6 +84,11 @@ QIcon Data::icon() const
 QString Data::id() const
 {
 	return m_id;
+}
+
+QString Data::dirPath() const
+{
+	return "";
 }
 
 QuickLaunchTable::QuickLaunchTable()
@@ -77,14 +117,16 @@ void QuickLaunchTable::init()
 	
 }
 
-ResultSet QuickLaunchTable::queryResult(const QString& key)
+ResultQueue QuickLaunchTable::queryResult(const QString& key)
 {
-	ResultSet s;
+	ResultQueue s;
 	for (auto it = m_items.begin(); it != m_items.end(); it++)
 	{
 		QString k = it.key();
 		Data v = it.value();
-		if (k.contains(key, Qt::CaseInsensitive))
+		if (k.contains(key, Qt::CaseInsensitive) || 
+			v.displayName().contains(key, Qt::CaseInsensitive) ||
+			v.name().contains(key, Qt::CaseInsensitive))
 			s << v;
 	}
 	
@@ -108,45 +150,11 @@ void QuickLaunchTable::walkThroughDirHelper(QDir* d)
 			if (info.isSymLink())
 				path = info.symLinkTarget();
 			QFileInfo f(path);
-			QString id = getId(info.baseName());
-			Data newData(id, info.baseName(), path, p.icon(f));
+			QString id = PyData::GetInstance().getPy(info.baseName());
+			Data newData(id, info.baseName(), f.fileName(), f.absolutePath(), p.icon(f));
 			m_items.insert(id, newData);
 		}
 	}
-}
-
-QString QuickLaunchTable::getId(const QString& name)
-{
-	QString nameID = name;
-	nameID.replace(" ", QString());
-	QString resultId;
-	for (int i = 0; i < nameID.length(); ++i)
-	{
-		ushort uni = nameID[i].unicode();
-		if (uni >= 0x4E00 && uni <= 0x9FA5)
-		{
-			QStringList l = PyData::GetInstance().queryPy(nameID[i]);
-			QStringList resultList;
-			for (int i = 0; i < l.count(); i++)
-			{
-				QStringList tempList = resultId.split("|");
-				for (int j = 0; j < tempList.count(); j++)
-				{
-					tempList[j] += l[i];
-				}
-				resultList += tempList;
-			}
-			resultId = resultList.join("|");
-		}
-		else
-		{
-			if (resultId.contains("|"))
-				resultId = resultId.replace("|", nameID[i] + QString("|"));
-			else
-				resultId += nameID[i];
-		}
-	}
-	return resultId;
 }
 
 MainDataSet::MainDataSet()
@@ -160,14 +168,72 @@ MainDataSet::~MainDataSet()
 
 }
 
-ResultSet MainDataSet::queryResult(const QString& key)
+void MainDataSet::queryResult(const QString& key)
 {
+	queryMutex.lock();
+	m_resultKey = key;
+	m_resultQueue.clear();
+	if (!key.isEmpty())
+		m_resultQueue.append(m_pQLTable->queryResult(key));
+	queryMutex.unlock();
+
+	emit dataChanged(key);
+
 	if (key.isEmpty())
-		return ResultSet();
-	return m_pQLTable->queryResult(key);
+		return;
+
+	DWORD i;
+	std::wstring s(key.toStdWString());
+	Everything_SetSearch(s.c_str());
+	Everything_SetMax(6 * 15);
+	Everything_Query(TRUE);
+
+	QFileIconProvider p;
+	for (i = 0; i < Everything_GetNumResults(); i++)
+	{
+		QString strPath = QString::fromStdWString(Everything_GetResultPath(i));
+		QString strName = QString::fromStdWString(Everything_GetResultFileName(i));
+		QString strFullPath = QDir::toNativeSeparators(strPath + "/" + strName);
+		QString strId = PyData::GetInstance().getPy(strName);
+		QFileInfo f(strFullPath);
+		Data newData(strId, strName, strName, strPath, p.icon(f));
+		queryMutex.lock();
+		m_resultQueue.append(newData);
+		queryMutex.unlock();
+		if (i % 6 == 0)
+			emit dataChanged(key);
+	}
+
+	emit dataChanged(key);
+}
+
+bool MainDataSet::takeData(Data& d, const QString& key)
+{
+	bool r = false;
+	if (key != m_resultKey)
+		return false;
+
+	queryMutex.lock();
+	if (!m_resultQueue.isEmpty())
+	{
+		d = m_resultQueue.dequeue();
+		r = true;
+	}
+	queryMutex.unlock();
+
+	return r;
+}
+
+void MainDataSet::onStartQuery(const QString& key)
+{
+	queryResult(key);
 }
 
 void MainDataSet::init()
 {
+	m_workThread = new QThread(this);
+	moveToThread(m_workThread);
+	m_workThread->start();
+
 	m_pQLTable->init();
 }

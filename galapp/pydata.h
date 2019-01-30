@@ -15,6 +15,7 @@ public:
 
 	void init();
 	QStringList queryPy(const QChar& key) const;
+	QString getPy(const QString& key) const;
 
 private:
 	PyData() {}
