@@ -5,6 +5,9 @@
 #include <QListWidget>
 #include <QItemDelegate>
 
+class MainDataSet;
+class Mainbox;
+
 class ResultItem : public QListWidgetItem
 {
 public:
@@ -35,7 +38,7 @@ class ResultListWidget : public QListWidget
 	Q_OBJECT
 
 public:
-	ResultListWidget(QWidget* parent = Q_NULLPTR);
+	ResultListWidget(Mainbox* parent = Q_NULLPTR);
 	~ResultListWidget();
 
 	void next();
@@ -43,11 +46,15 @@ public:
 	void shot();
 
 	void clear();
-	void setResult(const ResultSet& r);
+	void setMainDataSet(MainDataSet* d);
 	void delayShow();
 
 protected:
 	QSize sizeHint() const override;
+
+public slots:
+	void onDataChanged(const QString& key);
+	void onKeyChanged(const QString& key);
 
 protected slots:
 	void onItemDoubleClicked(QListWidgetItem* item);
@@ -55,6 +62,7 @@ protected slots:
 	void onCurrentRowChanged(int currentRow);
 	void onDelayShow();
 	void onSliderMove();
+	void onDelayLoad();
 	void firstInit();
 
 private:
@@ -62,7 +70,9 @@ private:
 	void loadAll();
 
 private:
-	ResultSet m_tempResult;
+	MainDataSet* m_dataSet;
 	int m_loadPoint;
-	QTimer* m_delayTimer;
+	QTimer* m_delayShowTimer;
+	QTimer* m_delayLoadTimer;
+	Mainbox* m_mainBox;
 };
