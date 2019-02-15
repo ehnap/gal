@@ -69,13 +69,13 @@ public:
 	bool takeData(Data& d, const QString& key);
 
 public slots:
-	void onStartQuery(const QString& key);
+	void onStartQuery(const QString& content);
 
 signals:
 	void dataChanged(const QString& key);
 
 protected slots:
-	void init();
+	void firstInit();
 
 private:
 	QuickLaunchTable* m_pQLTable;

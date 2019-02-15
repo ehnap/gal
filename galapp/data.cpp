@@ -160,7 +160,7 @@ void QuickLaunchTable::walkThroughDirHelper(QDir* d)
 MainDataSet::MainDataSet()
 	: m_pQLTable(new QuickLaunchTable())
 {
-	QTimer::singleShot(0, this, &MainDataSet::init);
+	QTimer::singleShot(0, this, &MainDataSet::firstInit);
 }
 
 MainDataSet::~MainDataSet()
@@ -224,12 +224,12 @@ bool MainDataSet::takeData(Data& d, const QString& key)
 	return r;
 }
 
-void MainDataSet::onStartQuery(const QString& key)
+void MainDataSet::onStartQuery(const QString& content)
 {
-	queryResult(key);
+	queryResult(content);
 }
 
-void MainDataSet::init()
+void MainDataSet::firstInit()
 {
 	m_workThread = new QThread(this);
 	moveToThread(m_workThread);

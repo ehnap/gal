@@ -5,6 +5,8 @@
 class QLineEdit;
 class ResultListWidget;
 class MainDataSet;
+class PluginManager;
+class PluginStackedWidget;
 
 class Mainbox : public QWidget
 {
@@ -22,7 +24,8 @@ protected slots:
 	void firstInit();
 
 signals:
-	void startQuery(const QString& key);
+	void startSearchQuery(const QString& key);
+	void startPluginQuery(const QString& key, const QString& value);
 
 protected:
 	bool event(QEvent* e) override;
@@ -36,6 +39,8 @@ private:
 	QLineEdit* m_pInputEdit;
 	ResultListWidget* m_pItemList;
 	MainDataSet* m_pMainDataSet;
+	PluginManager* m_pPluginManager;
+	PluginStackedWidget* m_pPluginWidget;
 
 private:
 	//drag
