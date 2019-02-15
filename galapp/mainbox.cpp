@@ -1,6 +1,7 @@
 #include "mainbox.h"
 #include "data.h"
 #include "resultlist.h"
+#include "pluginmanager.h"
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QListWidget>
@@ -37,12 +38,20 @@ Mainbox::Mainbox(QWidget* parent/*= Q_NULLPTR*/)
 	m_pInputEdit->setFont(f);
 	pMainlayout->addWidget(m_pInputEdit);
 
+	m_pPluginWidget = new PluginStackedWidget(this);
+	pMainlayout->addWidget(m_pPluginWidget);
+	m_pPluginWidget->hide();
+
+	m_pPluginManager = new PluginManager(this);
+	m_pPluginManager->setStackedWidget(m_pPluginWidget);
+	connect(this, &Mainbox::startPluginQuery, m_pPluginManager, &PluginManager::onStartQuery);
+	
 	m_pItemList = new ResultListWidget(this);
 	pMainlayout->addWidget(m_pItemList);
 
 	m_pMainDataSet = new MainDataSet();
 	connect(m_pMainDataSet, &MainDataSet::dataChanged, m_pItemList, &ResultListWidget::onDataChanged);
-	connect(this, &Mainbox::startQuery, m_pMainDataSet, &MainDataSet::onStartQuery);
+	connect(this, &Mainbox::startSearchQuery, m_pMainDataSet, &MainDataSet::onStartQuery);
 
 	m_pItemList->setMainDataSet(m_pMainDataSet);
 	connect(m_pInputEdit, &QLineEdit::textEdited, this, &Mainbox::textEdited);
@@ -70,7 +79,18 @@ void Mainbox::popUp()
 
 void Mainbox::textEdited(const QString& t)
 {
-	emit startQuery(t);
+	QString k = t.trimmed();
+	if (k.contains(" "))
+	{
+		QString strKey = k.left(k.indexOf(" "));
+		QString strContent = k.mid(k.indexOf(" "));
+		emit startPluginQuery(strKey, strContent);
+	}
+	else
+	{
+		m_pPluginWidget->hide();
+		emit startSearchQuery(t);
+	}
 }
 
 void Mainbox::firstInit()
