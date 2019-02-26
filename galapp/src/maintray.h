@@ -8,6 +8,9 @@ class QMenu;
 
 class MainTray : public QSystemTrayIcon
 {
+
+	Q_OBJECT
+
 public:
 	MainTray(Mainbox* box, QObject* parent = nullptr);
 	~MainTray();

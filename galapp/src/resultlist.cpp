@@ -8,7 +8,25 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QScrollBar>
+#include <QMenu>
+#include <QApplication>
+#include <QClipboard>
 #include <QStandardItemModel>
+#include <QTextStream>
+
+namespace
+{
+	struct TempData
+	{
+		int i;
+		Data d;
+	};
+
+	bool greaterThanCount(TempData a, TempData b)
+	{
+		return a.i > b.i;
+	}
+}
 
 ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	: QListWidget(parent)
@@ -30,10 +48,14 @@ ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	connect(m_delayShowTimer, &QTimer::timeout, this, &ResultListWidget::onDelayShow);
 	m_delayLoadTimer = new QTimer(this);
 	connect(m_delayLoadTimer, &QTimer::timeout, this, &ResultListWidget::onDelayLoad);
+	m_backupTimer = new QTimer(this);
+	m_backupTimer->setInterval(1000 * 60 * 30);
+	connect(m_backupTimer, &QTimer::timeout, this, &ResultListWidget::saveDB);
 }
 
 ResultListWidget::~ResultListWidget()
 {
+	saveDB();
 }
 
 void ResultListWidget::next()
@@ -59,6 +81,16 @@ void ResultListWidget::shot()
 		pItem->exec();
 }
 
+void ResultListWidget::extend()
+{
+	if (!isVisible())
+		return;
+
+	ResultItem* pItem = dynamic_cast<ResultItem*>(currentItem());
+	if (pItem)
+		pItem->extend();
+}
+
 void ResultListWidget::clear()
 {
 	hide();
@@ -74,6 +106,11 @@ void ResultListWidget::delayShow()
 {
 	m_delayShowTimer->stop();
 	m_delayShowTimer->start(6);
+}
+
+void ResultListWidget::addHitCount(const QString& key)
+{
+	m_countHashTable[key]++;
 }
 
 QSize ResultListWidget::sizeHint() const
@@ -161,21 +198,64 @@ void ResultListWidget::onKeyChanged(const QString& key)
 void ResultListWidget::firstInit()
 {
 	QFile f(":/scrollbarstyle.qss");
-	f.open(QFile::ReadOnly);
-	verticalScrollBar()->setStyleSheet(f.readAll());
-	QScrollBar* pScrollbar = verticalScrollBar();
-	connect(pScrollbar, &QScrollBar::sliderPressed, this, &ResultListWidget::onSliderMove);
-	connect(pScrollbar, &QScrollBar::sliderMoved, this, &ResultListWidget::onSliderMove);
+
+	if (f.open(QFile::ReadOnly))
+	{
+		verticalScrollBar()->setStyleSheet(f.readAll());
+		QScrollBar* pScrollbar = verticalScrollBar();
+		connect(pScrollbar, &QScrollBar::sliderPressed, this, &ResultListWidget::onSliderMove);
+		connect(pScrollbar, &QScrollBar::sliderMoved, this, &ResultListWidget::onSliderMove);
+		f.close();
+	}
+
+	QDir d(qApp->applicationDirPath());
+	bool bOk = d.cd("config");
+	if (!bOk)
+		d.mkdir("config");
+
+	QFile fData(qApp->applicationDirPath() + "\\config\\data.db");
+	if (fData.open(QFile::ReadOnly))
+	{
+		while (true)
+		{
+			QString lineContent = fData.readLine();
+			if (lineContent.split(" ").count() < 2)
+				break;
+
+			QString strCount = lineContent.split(" ").at(0);
+			QString strPath = lineContent.split(" ").at(1);
+			bool bOk = false;
+			int iCount = strCount.toInt(&bOk);
+			if (bOk && !strPath.isEmpty())
+				m_countHashTable.insert(strPath, iCount);
+			else
+			{
+				fData.close();
+				break;
+			}
+		}
+		
+	}
+
+	m_backupTimer->start();
 }
 
 void ResultListWidget::load()
 {
 	int i = 0;
 	Data d;
+	QList<TempData> tempList;
 	while (i++ < 6 + 3 && m_dataSet->takeData(d, m_mainBox->queryKey()))
 	{
-		addItem(new ResultItem(this, d));
+		TempData td;
+		td.i = m_countHashTable.value(QDir::toNativeSeparators(d.path()));
+		td.d = d;
+		tempList.append(td);
 	}
+	
+	qSort(tempList.begin(), tempList.end(), greaterThanCount);
+	for (auto i = 0; i < tempList.count(); i++)
+		addItem(new ResultItem(this, tempList[i].d));
 }
 
 void ResultListWidget::loadAll()
@@ -187,6 +267,23 @@ void ResultListWidget::loadAll()
 	}
 }
 
+void ResultListWidget::saveDB()
+{
+	QFile fData(qApp->applicationDirPath() + "\\config\\data.db");
+	if (fData.open(QFile::WriteOnly | QIODevice::Text))
+	{
+		QTextStream out(&fData);
+		QHash<QString, int>::const_iterator i = m_countHashTable.constBegin();
+		QString lineContent;
+		while (i != m_countHashTable.constEnd()) {
+			lineContent = QString::number(i.value()) + " " + i.key();
+			out << lineContent << "\n";
+			i++;
+		}
+		fData.close();
+	}
+}
+
 ResultItem::ResultItem(QListWidget* parent, const Data& data)
 	: QListWidgetItem(parent)
 	, m_data(data)
@@ -195,6 +292,8 @@ ResultItem::ResultItem(QListWidget* parent, const Data& data)
 	setData(Qt::UserRole, QVariant::fromValue(m_data));
 	setData(Qt::BackgroundRole, QColor(0x424242));
 	setSizeHint(QSize(-1, 56));
+
+	initMenu();
 }
 
 ResultItem::~ResultItem()
@@ -204,18 +303,73 @@ ResultItem::~ResultItem()
 
 void ResultItem::exec()
 {
-	QString fullPath = QDir::toNativeSeparators(m_data.path() + "\\" + m_data.name());
-	QFileInfo fi(fullPath);
-	if (fi.isFile())
+	if (m_data.type() == Data::Normal)
 	{
-		QProcess process;
-		process.setProgram(fullPath);
-		process.startDetached();
+		ResultListWidget* pWidget = qobject_cast<ResultListWidget*>(listWidget());
+		QString fullPath = QDir::toNativeSeparators(m_data.path());
+		if (pWidget)
+			pWidget->addHitCount(fullPath);
+		
+		QFileInfo fi(fullPath);
+		if (fi.isFile())
+		{
+			QProcess process;
+			process.setProgram(fullPath);
+			process.startDetached();
+		}
+		else if (fi.isDir())
+		{
+			QDesktopServices::openUrl(QUrl::fromLocalFile(fullPath));
+		}
 	}
-	else if (fi.isDir())
+	else
 	{
-		QDesktopServices::openUrl(QUrl::fromLocalFile(fullPath));
+		m_data.exec();
 	}
+}
+
+void ResultItem::extend()
+{
+	QListWidget* pWidget = listWidget();
+	if (!pWidget)
+		return;
+
+	QRect rc = pWidget->visualItemRect(this);
+	QPoint lt = pWidget->mapToGlobal(QPoint(0, 0));
+	m_menu->move(lt.x() + rc.x() + rc.width() / 2, lt.y() + rc.y() + rc.height() / 2);
+	m_menu->show();
+}
+
+void ResultItem::copyPath()
+{
+	QClipboard* pClipboard = QApplication::clipboard();
+	pClipboard->setText(m_data.path());
+}
+
+void ResultItem::copyDir()
+{
+	QClipboard* pClipboard = QApplication::clipboard();
+	pClipboard->setText(m_data.dirPath());
+}
+
+void ResultItem::openDir()
+{
+	QProcess process;
+	process.startDetached("explorer /select," + QDir::toNativeSeparators(m_data.path()));
+}
+
+void ResultItem::initMenu()
+{
+	m_menu = new QMenu(listWidget());
+	auto pOd = new QAction(QObject::tr("&Open Dir"), m_menu);
+	QObject::connect(pOd, &QAction::triggered, this, &ResultItem::openDir);
+	m_menu->addAction(pOd);
+	auto pCp = new QAction(QObject::tr("&Copy Path"), m_menu);
+	QObject::connect(pCp, &QAction::triggered, this, &ResultItem::copyPath);
+	m_menu->addAction(pCp);
+	auto pCd = new QAction(QObject::tr("&Copy Dir"), m_menu);
+	QObject::connect(pCd, &QAction::triggered, this, &ResultItem::copyDir);
+	m_menu->addAction(pCd);
 }
 
 ResultItemDelegate::ResultItemDelegate(QObject* parent /*= nullptr*/)

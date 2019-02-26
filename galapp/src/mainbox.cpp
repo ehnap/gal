@@ -9,13 +9,16 @@
 #include <QTimer>
 #include <QScreen>
 #include <QGuiApplication>
-#include <QPainter>
+#include <QDir>
+#include <QUrl>
+#include <QDesktopServices>
 
 #include <windows.h>
 
 Mainbox::Mainbox(QWidget* parent/*= Q_NULLPTR*/)
 	: QWidget(parent, Qt::FramelessWindowHint)
 	, m_bDrag(false)
+	, m_bSearchEngineState(false)
 {
 	setAutoFillBackground(true);
 	QPalette p = palette();
@@ -77,18 +80,52 @@ void Mainbox::popUp()
 	::SetForegroundWindow(hWnd);
 }
 
+bool Mainbox::searchEngineKeyFilter(const QString& key)
+{
+	auto it = m_searchEngineTable.find(key);
+	return it != m_searchEngineTable.end();
+}
+
+bool Mainbox::execSearchEngine(const QString& key, const QString& value)
+{
+	auto it = m_searchEngineTable.find(key);
+	if (it != m_searchEngineTable.end())
+	{
+		QString strContent = it.value();
+		QUrl u(strContent.replace("@", value));
+		QString strUrl = u.url(QUrl::EncodeSpaces);
+		QDesktopServices::openUrl(strUrl);
+		return true;
+	}
+	return false;
+}
+
 void Mainbox::textEdited(const QString& t)
 {
 	QString k = t.trimmed();
 	if (k.contains(" "))
 	{
+		m_pItemList->clear();
+		adjustSize();
 		QString strKey = k.left(k.indexOf(" "));
-		QString strContent = k.mid(k.indexOf(" "));
-		emit startPluginQuery(strKey, strContent);
+		QString strContent = k.mid(k.indexOf(" ") + 1);
+		if (searchEngineKeyFilter(strKey))
+		{
+			m_bSearchEngineState = true;
+			m_searchKey = strKey;
+			m_searchContent = strContent;
+		}
+		else
+		{
+			m_bSearchEngineState = false;
+			emit startPluginQuery(strKey, strContent);
+		}
 	}
 	else
 	{
+		m_bSearchEngineState = false;
 		m_pPluginWidget->hide();
+		adjustSize();
 		emit startSearchQuery(t);
 	}
 }
@@ -99,7 +136,10 @@ void Mainbox::firstInit()
 	QRect r = pcScreen->availableGeometry();
 	QSize s = size();
 	move((r.width() - s.width()) / 2, (r.height() - s.height()) / 4);
+	
 	::RegisterHotKey((HWND)winId(), 0x0923, MOD_ALT, VK_SPACE);
+
+	initSearchEngineTable();
 }
 
 bool Mainbox::event(QEvent* e)
@@ -108,6 +148,7 @@ bool Mainbox::event(QEvent* e)
 	{
 		m_pItemList->clear();
 		m_pInputEdit->clear();
+		m_pPluginWidget->hide();
 		adjustSize();
 		hide();
 	}
@@ -118,6 +159,7 @@ bool Mainbox::event(QEvent* e)
 		{
 			m_pItemList->clear();
 			m_pInputEdit->clear();
+			m_pPluginWidget->hide();
 			adjustSize();
 			hide();
 		}
@@ -140,17 +182,29 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 
 	if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
 	{
-		m_pItemList->shot();
-		m_pItemList->clear();
-		m_pInputEdit->clear();
-		adjustSize();
-		hide();
+		if (!m_bSearchEngineState)
+		{
+			m_pItemList->shot();
+			m_pItemList->clear();
+			m_pInputEdit->clear();
+			adjustSize();
+			hide();
+		}
+		else
+			execSearchEngine(m_searchKey, m_searchContent);
+	}
+
+	if (e->key() == Qt::Key_Right && e->modifiers() & Qt::AltModifier)
+	{
+		m_pItemList->extend();
+		m_pPluginWidget->extend();
 	}
 
 	if (e->key() == Qt::Key_Escape)
 	{
 		m_pItemList->clear();
 		m_pInputEdit->clear();
+		m_pPluginWidget->hide();
 		adjustSize();
 		hide();
 	}
@@ -192,4 +246,38 @@ bool Mainbox::nativeEvent(const QByteArray& eventType, void* message, long* resu
 		popUp();
 
 	return QWidget::nativeEvent(eventType, message, result);
+}
+
+void Mainbox::initSearchEngineTable()
+{
+	m_searchEngineTable.insert("bing","https://www.bing.com/search?FORM=BDT1DF&PC=BDT1&q=@");
+	m_searchEngineTable.insert("blbl", "http://www.bilibili.tv/search?keyword=@");
+	m_searchEngineTable.insert("tb", "https://s.taobao.com/search?q=@");
+	m_searchEngineTable.insert("db", "https://www.douban.com/search?q=@");
+	m_searchEngineTable.insert("epub", "http://cn.epubee.com/books/?s=@");
+	
+	QDir d(qApp->applicationDirPath());
+	bool bOk = d.cd("config");
+	if (!bOk)
+		d.mkdir("config");
+
+	QFile fData(qApp->applicationDirPath() + "\\config\\searchenginemap.db");
+	if (fData.open(QFile::ReadOnly))
+	{
+		while (true)
+		{
+			QString lineContent = fData.readLine();
+			if (lineContent.split(" ").count() < 2)
+				break;
+			QString strKey = lineContent.split(" ").at(0);
+			QString strUrl = lineContent.split(" ").at(1);
+			if (!strKey.isEmpty() && !strUrl.isEmpty())
+				m_searchEngineTable[strKey] = strUrl;
+			else
+			{
+				fData.close();
+				break;
+			}
+		}
+	}
 }

@@ -15,6 +15,12 @@ public:
 
 	void setCurrentWidget(Plugin::PluginType t);
 	QWidget* widget(Plugin::PluginType t);
+
+	void extend();
+
+private:
+	LabelPluginWidget* m_pLabelPWidget;
+	FreeWidget* m_pFreeWidget;
 };
 
 
