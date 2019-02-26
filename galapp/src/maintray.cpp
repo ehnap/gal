@@ -11,16 +11,17 @@ MainTray::MainTray(Mainbox* box, QObject* parent /*= nullptr*/)
 {
 	m_pTrayMenu = new QMenu(Q_NULLPTR);
 	
-	m_pStartAction = m_pTrayMenu->addAction("start with bootup");
+	m_pStartAction = m_pTrayMenu->addAction(tr("start with bootup"));
 	m_pStartAction->setIconVisibleInMenu(false);
 	m_pStartAction->setCheckable(true);
 	connect(m_pStartAction, &QAction::triggered, this, &MainTray::onStartActionTriggered);
 
-	QAction* pQuitAction = m_pTrayMenu->addAction("quit");
+	QAction* pQuitAction = m_pTrayMenu->addAction(tr("quit"));
 	pQuitAction->setIconVisibleInMenu(false);
 	connect(pQuitAction, &QAction::triggered, this, &MainTray::onQuitActionTriggered);
 
 	connect(this, &MainTray::activated, this, &MainTray::onActivated);
+	setToolTip(tr("Gal Launcher"));
 	setIcon(QIcon(":/logo.png"));
 	setContextMenu(m_pTrayMenu);
 

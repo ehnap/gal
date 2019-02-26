@@ -63,9 +63,17 @@ void PluginManager::init()
 				switch (t)
 				{
 				case Plugin::JS_SIMPLE:
+				{
 					JsSimplePlugin* p = new JsSimplePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
 					m_plugins.insert(strKey, p);
 					break;
+				}
+				case Plugin::CPP_FREE:
+				{
+					CppFreePlugin* p = new CppFreePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
+					m_plugins.insert(strKey, p);
+					break;
+				}
 				}
 			}
 		}
@@ -75,21 +83,55 @@ void PluginManager::init()
 PluginStackedWidget::PluginStackedWidget(QWidget* parent)
 	: QStackedWidget(parent)
 {
-	addWidget(new JsSimplePluginWidget(this));
+	m_pLabelPWidget = new LabelPluginWidget(this);
+	m_pFreeWidget = new FreeWidget(this);
+
+	addWidget(m_pLabelPWidget);
+	addWidget(m_pFreeWidget);
 }
 
 void PluginStackedWidget::setCurrentWidget(Plugin::PluginType t)
 {
-	if (t != Plugin::UNKNOWN_TYPE)
+	switch (t)
 	{
-		QStackedWidget::setCurrentIndex((int)t);
+	case Plugin::JS_SIMPLE:
+		QStackedWidget::setCurrentWidget(m_pLabelPWidget);
+		break;
+	case Plugin::CPP_FREE:
+		QStackedWidget::setCurrentWidget(m_pFreeWidget);
+		break;
+	case Plugin::UNKNOWN_TYPE:
+		break;
+	default:
+		break;
 	}
 }
 
 QWidget* PluginStackedWidget::widget(Plugin::PluginType t)
 {
-	if (t == Plugin::UNKNOWN_TYPE)
-		return Q_NULLPTR;
+	QWidget* pWidget = currentWidget();
+	switch (t)
+	{
+	case Plugin::JS_SIMPLE:
+		pWidget = m_pLabelPWidget;
+		break;
+	case Plugin::CPP_FREE:
+		pWidget = m_pFreeWidget;
+		break;
+	case Plugin::UNKNOWN_TYPE:
+		break;
+	default:
+		break;
+	}
+	return pWidget;
+}
 
-	return QStackedWidget::widget((int)t);
+void PluginStackedWidget::extend()
+{
+	if (!isVisible())
+		return;
+
+	PluginWidget* pWidget = qobject_cast<PluginWidget*>(currentWidget());
+	if (pWidget)
+		pWidget->extend();
 }

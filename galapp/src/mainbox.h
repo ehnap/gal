@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+#include <QHash>
 
 class QLineEdit;
 class ResultListWidget;
@@ -10,6 +11,7 @@ class PluginStackedWidget;
 
 class Mainbox : public QWidget
 {
+
 	Q_OBJECT
 
 public:
@@ -18,6 +20,9 @@ public:
 
 	QString queryKey() const;
 	void popUp();
+
+	bool searchEngineKeyFilter(const QString& key);
+	bool execSearchEngine(const QString& key, const QString& value);
 
 protected slots:
 	void textEdited(const QString& t);
@@ -36,11 +41,20 @@ protected:
 	bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
 
 private:
+	void initSearchEngineTable();
+
+private:
 	QLineEdit* m_pInputEdit;
 	ResultListWidget* m_pItemList;
 	MainDataSet* m_pMainDataSet;
 	PluginManager* m_pPluginManager;
 	PluginStackedWidget* m_pPluginWidget;
+
+private:
+	QHash<QString, QString> m_searchEngineTable;
+	bool m_bSearchEngineState;
+	QString m_searchKey;
+	QString m_searchContent;
 
 private:
 	//drag

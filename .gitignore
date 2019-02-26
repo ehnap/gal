@@ -7,5 +7,6 @@ galapp/gal.vcxproj
 galapp/gal.vcxproj.*
 galapp/release/
 galapp/x64/
+galapp/ts/.qmake.stash
 *.sln
 .vs/

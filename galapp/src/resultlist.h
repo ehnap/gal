@@ -7,17 +7,31 @@
 
 class MainDataSet;
 class Mainbox;
+class QMenu;
 
-class ResultItem : public QListWidgetItem
+class ResultItem : public QObject, public QListWidgetItem
 {
+
+	Q_OBJECT
+
 public:
 	ResultItem(QListWidget* parent, const Data& data);
 	~ResultItem();
 
 	void exec();
+	void extend();
+
+private slots:
+	void copyPath();
+	void copyDir();
+	void openDir();
+
+private:
+	void initMenu();
 
 private:
 	Data m_data;
+	QMenu* m_menu;
 };
 
 class ResultItemDelegate : public QItemDelegate
@@ -44,10 +58,12 @@ public:
 	void next();
 	void prev();
 	void shot();
+	void extend();
 
 	void clear();
 	void setMainDataSet(MainDataSet* d);
 	void delayShow();
+	void addHitCount(const QString& key);
 
 protected:
 	QSize sizeHint() const override;
@@ -64,6 +80,7 @@ protected slots:
 	void onSliderMove();
 	void onDelayLoad();
 	void firstInit();
+	void saveDB();
 
 private:
 	void load();
@@ -74,5 +91,7 @@ private:
 	int m_loadPoint;
 	QTimer* m_delayShowTimer;
 	QTimer* m_delayLoadTimer;
+	QTimer* m_backupTimer;
 	Mainbox* m_mainBox;
+	QHash<QString, int> m_countHashTable;
 };

@@ -12,8 +12,18 @@ class QDir;
 class Data
 {
 public:
+	enum Type
+	{
+		Normal,
+		Sys_controlpanel,
+		Sys_computer,
+		Sys_trash,
+		Sys_document,
+	};
+
 	Data();
 	Data(const QString& id, const QString& displayname, const QString& name, const QString& path, const QIcon& icon);
+	Data(Type t, const QString& id, const QString& displayname, const QString& name, const QIcon& icon);
 	Data(const Data& other);
 	Data& operator = (const Data& other);
 	~Data();
@@ -22,14 +32,18 @@ public:
 	QString displayName() const;
 	QString path() const;
 	QIcon icon() const;
+	Type type() const;
 	QString id() const;
 	QString dirPath() const;
+
+	void exec(); //special type
 
 private:
     QString m_id;
 	QString m_name;
 	QString m_displayName;
 	QString m_path;
+	Type m_type;
 	QIcon m_icon;
 };
 
@@ -44,6 +58,7 @@ public:
 	~QuickLaunchTable();
 
 	void init();
+	void sys_init();
 
 	ResultQueue queryResult(const QString& key);
 

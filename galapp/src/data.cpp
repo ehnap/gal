@@ -10,6 +10,8 @@
 #include <QProcess>
 #include <QMutex>
 
+#include "Shlobj.h"
+
 namespace {
 	QMutex queryMutex;
 }
@@ -24,6 +26,7 @@ Data::Data(const QString& id,
 	, m_name(name)
 	, m_path(path)
 	, m_icon(icon)
+	, m_type(Normal)
 {
 
 }
@@ -34,6 +37,7 @@ Data::Data()
 	, m_name("")
 	, m_path("")
 	, m_icon(QIcon())
+	, m_type(Normal)
 {
 
 }
@@ -45,6 +49,18 @@ Data::Data(const Data& other)
 	m_name = other.m_name;
 	m_path = other.m_path;
 	m_displayName = other.m_displayName;
+	m_type = other.m_type;
+}
+
+Data::Data(Type t, const QString& id, const QString& displayname, const QString& name, const QIcon& icon)
+	: m_id(id)
+	, m_displayName(displayname)
+	, m_name(name)
+	, m_path("")
+	, m_icon(icon)
+	, m_type(t)
+{
+
 }
 
 Data& Data::operator=(const Data& other)
@@ -54,6 +70,7 @@ Data& Data::operator=(const Data& other)
 	m_name = other.m_name;
 	m_icon = other.m_icon;
 	m_displayName = other.m_displayName;
+	m_type = other.m_type;
 	return *this;
 }
 
@@ -73,12 +90,17 @@ QString Data::displayName() const
 
 QString Data::path() const
 {
-	return m_path;
+	return QDir::toNativeSeparators(m_path + "/" + m_name);
 }
 
 QIcon Data::icon() const
 {
 	return m_icon;
+}
+
+Data::Type Data::type() const
+{
+	return m_type;
 }
 
 QString Data::id() const
@@ -88,7 +110,43 @@ QString Data::id() const
 
 QString Data::dirPath() const
 {
-	return "";
+	return m_path;
+}
+
+void Data::exec()
+{
+	if (m_type == Normal)
+		return;
+
+	if (m_type == Sys_controlpanel)
+	{
+		QProcess process;
+		process.startDetached("control");
+		return;
+	}
+
+	if (m_type == Sys_document)
+	{
+		QProcess process;
+		process.startDetached("explorer /e");
+		return;
+	}
+
+	if (m_type == Sys_computer)
+	{
+		QProcess process;
+		process.startDetached("explorer");
+		return;
+	}
+
+	if (m_type == Sys_trash)
+	{
+		QProcess process;
+		process.setProgram("explorer.exe");
+		process.setArguments(QStringList() << "::{645FF040-5081-101B-9F08-00AA002F954E}");
+		process.startDetached();
+		return;
+	}
 }
 
 QuickLaunchTable::QuickLaunchTable()
@@ -115,6 +173,28 @@ void QuickLaunchTable::init()
 		walkThroughDirHelper(&curDir);
 	}
 	
+	// System
+	sys_init();
+}
+
+void QuickLaunchTable::sys_init()
+{
+	QFileIconProvider p;
+	QString id = "kongzhimianban";
+	Data cpData(Data::Sys_controlpanel, id, QObject::tr("Control Panel"), QObject::tr("Control Panel"), p.icon(QFileIconProvider::Computer));
+	m_items.insert(id, cpData);
+
+	id = "wodediannao|jisuanji";
+	Data mcData(Data::Sys_computer, id, QObject::tr("My computer"), QObject::tr("My computer"), p.icon(QFileIconProvider::Computer));
+	m_items.insert(id, mcData);
+
+	id = "wodewendang";
+	Data mdData(Data::Sys_document, id, QObject::tr("My document"), QObject::tr("My document"), p.icon(QFileIconProvider::Folder));
+	m_items.insert(id, mdData);
+
+	id = "huishouzhan";
+	Data tcData(Data::Sys_trash, id, QObject::tr("Trash"), QObject::tr("Trash"), p.icon(QFileIconProvider::Trashcan));
+	m_items.insert(id, tcData);
 }
 
 ResultQueue QuickLaunchTable::queryResult(const QString& key)
