@@ -13,7 +13,7 @@ class PluginStackedWidget;
 class Plugin : public QObject
 {
 public:
-	enum PluginType
+	enum class PluginType
 	{
 		JS_SIMPLE,
 		CPP_FREE,

@@ -62,15 +62,15 @@ QString Plugin::author() const
 Plugin::PluginType Plugin::getTypeFromStr(const QString& str)
 {
 	if (str.compare("JS_SIMPLE",Qt::CaseInsensitive) == 0)
-		return JS_SIMPLE;
+		return PluginType::JS_SIMPLE;
 	if (str.compare("CPP_FREE", Qt::CaseInsensitive) == 0)
-		return CPP_FREE;
+		return PluginType::CPP_FREE;
 
-	return UNKNOWN_TYPE;
+	return PluginType::UNKNOWN_TYPE;
 }
 
 JsSimplePlugin::JsSimplePlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
-	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::JS_SIMPLE)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::JS_SIMPLE)
 	, m_widget(Q_NULLPTR)
 {
 	m_jsEngine = new QJSEngine();
@@ -167,7 +167,7 @@ PluginStackedWidget* PluginWidget::stackedWidget() const
 }
 
 CppFreePlugin::CppFreePlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
-	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::CPP_FREE)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_FREE)
 	, m_widget(Q_NULLPTR)
 {
 	QTimer::singleShot(0, this, &CppFreePlugin::firstInit);

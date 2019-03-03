@@ -12,7 +12,7 @@ class QDir;
 class Data
 {
 public:
-	enum Type
+	enum class Type
 	{
 		Normal,
 		Sys_controlpanel,

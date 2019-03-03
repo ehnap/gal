@@ -18,7 +18,7 @@
 Mainbox::Mainbox(QWidget* parent/*= Q_NULLPTR*/)
 	: QWidget(parent, Qt::FramelessWindowHint)
 	, m_bDrag(false)
-	, m_bSearchEngineState(false)
+	, m_currentState(OmniState::File)
 {
 	setAutoFillBackground(true);
 	QPalette p = palette();
@@ -102,32 +102,7 @@ bool Mainbox::execSearchEngine(const QString& key, const QString& value)
 
 void Mainbox::textEdited(const QString& t)
 {
-	QString k = t.trimmed();
-	if (k.contains(" "))
-	{
-		m_pItemList->clear();
-		adjustSize();
-		QString strKey = k.left(k.indexOf(" "));
-		QString strContent = k.mid(k.indexOf(" ") + 1);
-		if (searchEngineKeyFilter(strKey))
-		{
-			m_bSearchEngineState = true;
-			m_searchKey = strKey;
-			m_searchContent = strContent;
-		}
-		else
-		{
-			m_bSearchEngineState = false;
-			emit startPluginQuery(strKey, strContent);
-		}
-	}
-	else
-	{
-		m_bSearchEngineState = false;
-		m_pPluginWidget->hide();
-		adjustSize();
-		emit startSearchQuery(t);
-	}
+	processInputWord(t);
 }
 
 void Mainbox::firstInit()
@@ -182,7 +157,11 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 
 	if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
 	{
-		if (!m_bSearchEngineState)
+		if (m_currentState == OmniState::Command)
+		{
+			executeCommand();
+		}
+		else if (m_currentState != OmniState::Plugin)
 		{
 			m_pItemList->shot();
 			m_pItemList->clear();
@@ -190,7 +169,7 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 			adjustSize();
 			hide();
 		}
-		else
+		else 
 			execSearchEngine(m_searchKey, m_searchContent);
 	}
 
@@ -280,4 +259,45 @@ void Mainbox::initSearchEngineTable()
 			}
 		}
 	}
+}
+
+void Mainbox::processInputWord(const QString& t)
+{
+	m_pItemList->clear();
+	adjustSize();
+	m_pPluginWidget->hide();
+
+	QString k = t.trimmed();
+	if (k.contains(" "))
+	{
+		QString strKey = k.left(k.indexOf(" "));
+		QString strContent = k.mid(k.indexOf(" ") + 1);
+		if (strKey == ">")
+		{
+			m_currentState = OmniState::Command;
+			m_searchContent = strContent;
+		}
+		else if (searchEngineKeyFilter(strKey))
+		{
+			m_currentState = OmniState::Search;
+			m_searchKey = strKey;
+			m_searchContent = strContent;
+		}
+		else
+		{
+			m_currentState = OmniState::Plugin;
+			emit startPluginQuery(strKey, strContent);
+		}
+	}
+	else
+	{
+		m_currentState = OmniState::File;
+		emit startSearchQuery(t);
+	}
+}
+
+void Mainbox::executeCommand()
+{
+	QString s = "start cmd /k " + m_searchContent;
+	system(s.toStdString().c_str());
 }

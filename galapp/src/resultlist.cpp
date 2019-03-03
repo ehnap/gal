@@ -303,7 +303,7 @@ ResultItem::~ResultItem()
 
 void ResultItem::exec()
 {
-	if (m_data.type() == Data::Normal)
+	if (m_data.type() == Data::Type::Normal)
 	{
 		ResultListWidget* pWidget = qobject_cast<ResultListWidget*>(listWidget());
 		QString fullPath = QDir::toNativeSeparators(m_data.path());

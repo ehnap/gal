@@ -26,7 +26,7 @@ Data::Data(const QString& id,
 	, m_name(name)
 	, m_path(path)
 	, m_icon(icon)
-	, m_type(Normal)
+	, m_type(Type::Normal)
 {
 
 }
@@ -37,7 +37,7 @@ Data::Data()
 	, m_name("")
 	, m_path("")
 	, m_icon(QIcon())
-	, m_type(Normal)
+	, m_type(Type::Normal)
 {
 
 }
@@ -115,31 +115,31 @@ QString Data::dirPath() const
 
 void Data::exec()
 {
-	if (m_type == Normal)
+	if (m_type == Type::Normal)
 		return;
 
-	if (m_type == Sys_controlpanel)
+	if (m_type == Type::Sys_controlpanel)
 	{
 		QProcess process;
 		process.startDetached("control");
 		return;
 	}
 
-	if (m_type == Sys_document)
+	if (m_type == Type::Sys_document)
 	{
 		QProcess process;
 		process.startDetached("explorer /e");
 		return;
 	}
 
-	if (m_type == Sys_computer)
+	if (m_type == Type::Sys_computer)
 	{
 		QProcess process;
 		process.startDetached("explorer");
 		return;
 	}
 
-	if (m_type == Sys_trash)
+	if (m_type == Type::Sys_trash)
 	{
 		QProcess process;
 		process.setProgram("explorer.exe");
@@ -181,19 +181,19 @@ void QuickLaunchTable::sys_init()
 {
 	QFileIconProvider p;
 	QString id = "kongzhimianban";
-	Data cpData(Data::Sys_controlpanel, id, QObject::tr("Control Panel"), QObject::tr("Control Panel"), p.icon(QFileIconProvider::Computer));
+	Data cpData(Data::Type::Sys_controlpanel, id, QObject::tr("Control Panel"), QObject::tr("Control Panel"), p.icon(QFileIconProvider::Computer));
 	m_items.insert(id, cpData);
 
 	id = "wodediannao|jisuanji";
-	Data mcData(Data::Sys_computer, id, QObject::tr("My computer"), QObject::tr("My computer"), p.icon(QFileIconProvider::Computer));
+	Data mcData(Data::Type::Sys_computer, id, QObject::tr("My computer"), QObject::tr("My computer"), p.icon(QFileIconProvider::Computer));
 	m_items.insert(id, mcData);
 
 	id = "wodewendang";
-	Data mdData(Data::Sys_document, id, QObject::tr("My document"), QObject::tr("My document"), p.icon(QFileIconProvider::Folder));
+	Data mdData(Data::Type::Sys_document, id, QObject::tr("My document"), QObject::tr("My document"), p.icon(QFileIconProvider::Folder));
 	m_items.insert(id, mdData);
 
 	id = "huishouzhan";
-	Data tcData(Data::Sys_trash, id, QObject::tr("Trash"), QObject::tr("Trash"), p.icon(QFileIconProvider::Trashcan));
+	Data tcData(Data::Type::Sys_trash, id, QObject::tr("Trash"), QObject::tr("Trash"), p.icon(QFileIconProvider::Trashcan));
 	m_items.insert(id, tcData);
 }
 

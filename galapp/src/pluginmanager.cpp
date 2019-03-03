@@ -62,13 +62,13 @@ void PluginManager::init()
 				Plugin::PluginType t = Plugin::getTypeFromStr(configSetting.value("type").toString());
 				switch (t)
 				{
-				case Plugin::JS_SIMPLE:
+				case Plugin::PluginType::JS_SIMPLE:
 				{
 					JsSimplePlugin* p = new JsSimplePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
 					m_plugins.insert(strKey, p);
 					break;
 				}
-				case Plugin::CPP_FREE:
+				case Plugin::PluginType::CPP_FREE:
 				{
 					CppFreePlugin* p = new CppFreePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
 					m_plugins.insert(strKey, p);
@@ -94,13 +94,13 @@ void PluginStackedWidget::setCurrentWidget(Plugin::PluginType t)
 {
 	switch (t)
 	{
-	case Plugin::JS_SIMPLE:
+	case Plugin::PluginType::JS_SIMPLE:
 		QStackedWidget::setCurrentWidget(m_pLabelPWidget);
 		break;
-	case Plugin::CPP_FREE:
+	case Plugin::PluginType::CPP_FREE:
 		QStackedWidget::setCurrentWidget(m_pFreeWidget);
 		break;
-	case Plugin::UNKNOWN_TYPE:
+	case Plugin::PluginType::UNKNOWN_TYPE:
 		break;
 	default:
 		break;
@@ -112,13 +112,13 @@ QWidget* PluginStackedWidget::widget(Plugin::PluginType t)
 	QWidget* pWidget = currentWidget();
 	switch (t)
 	{
-	case Plugin::JS_SIMPLE:
+	case Plugin::PluginType::JS_SIMPLE:
 		pWidget = m_pLabelPWidget;
 		break;
-	case Plugin::CPP_FREE:
+	case Plugin::PluginType::CPP_FREE:
 		pWidget = m_pFreeWidget;
 		break;
-	case Plugin::UNKNOWN_TYPE:
+	case Plugin::PluginType::UNKNOWN_TYPE:
 		break;
 	default:
 		break;
