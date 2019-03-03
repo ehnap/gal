@@ -157,20 +157,26 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 
 	if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
 	{
-		if (m_currentState == OmniState::Command)
+		switch (m_currentState)
 		{
-			executeCommand();
-		}
-		else if (m_currentState != OmniState::Plugin)
-		{
+		case Mainbox::OmniState::Search:
+			execSearchEngine(m_searchKey, m_searchContent);
+			break;
+		case Mainbox::OmniState::Plugin:
 			m_pItemList->shot();
 			m_pItemList->clear();
 			m_pInputEdit->clear();
 			adjustSize();
 			hide();
-		}
-		else 
-			execSearchEngine(m_searchKey, m_searchContent);
+			break;
+		case Mainbox::OmniState::Command:
+			executeCommand();
+			break;
+		case Mainbox::OmniState::File:
+			break;
+		default:
+			break;
+		}	
 	}
 
 	if (e->key() == Qt::Key_Right && e->modifiers() & Qt::AltModifier)
