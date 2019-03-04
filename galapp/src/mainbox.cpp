@@ -162,7 +162,7 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 		case Mainbox::OmniState::Search:
 			execSearchEngine(m_searchKey, m_searchContent);
 			break;
-		case Mainbox::OmniState::Plugin:
+		case Mainbox::OmniState::File:
 			m_pItemList->shot();
 			m_pItemList->clear();
 			m_pInputEdit->clear();
@@ -172,7 +172,7 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 		case Mainbox::OmniState::Command:
 			executeCommand();
 			break;
-		case Mainbox::OmniState::File:
+		case Mainbox::OmniState::Plugin:
 			break;
 		default:
 			break;
