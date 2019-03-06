@@ -2,7 +2,7 @@ Gal
 ===
 
 [![License](https://img.shields.io/github/license/ehnap/gal.svg)](https://github.com/ehnap/gal/blob/master/LICENSE)
-[![Code size](https://img.shields.io/github/languages/code-size/ehnap/gal.svg)](https://github.com/Wox-launcher/Wox/releases)
+[![Code size](https://img.shields.io/github/languages/code-size/ehnap/gal.svg)](https://github.com/ehnap/gal/releases)
 [![RamenBless](https://cdn.rawgit.com/LunaGao/BlessYourCodeTag/master/tags/alpaca.svg)](https://github.com/LunaGao/BlessYourCodeTag)
 
 **Gal == Gal is A Launcher**
