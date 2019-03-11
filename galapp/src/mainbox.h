@@ -43,6 +43,10 @@ protected:
 private:
 	void initSearchEngineTable();
 
+	bool searchEngineFilter(const QString& k);
+	bool pluginFilter(const QString& k);
+	bool fileFilter(const QString& k);
+
 private:
 	QLineEdit* m_pInputEdit;
 	ResultListWidget* m_pItemList;

@@ -189,12 +189,6 @@ void ResultListWidget::onDataChanged(const QString& key)
 	m_delayLoadTimer->start(6);
 }
 
-void ResultListWidget::onKeyChanged(const QString& key)
-{
-	Q_UNUSED(key);
-	clear();
-}
-
 void ResultListWidget::firstInit()
 {
 	QFile f(":/scrollbarstyle.qss");

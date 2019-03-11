@@ -20,6 +20,13 @@ void PluginManager::setStackedWidget(PluginStackedWidget* pWidget)
 	m_stackedWidget = pWidget;
 }
 
+
+bool PluginManager::isPluginExist(const QString& key)
+{
+	Plugin* p = m_plugins.value(key);
+	return p;
+}
+
 void PluginManager::onStartQuery(const QString& key, const QString& value)
 {
 	Plugin* p = m_plugins.value(key);

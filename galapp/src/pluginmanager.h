@@ -34,6 +34,7 @@ public:
 	~PluginManager();
 
 	void setStackedWidget(PluginStackedWidget* pWidget);
+	bool isPluginExist(const QString& key);
 
 public slots:
 	void onStartQuery(const QString& key, const QString& value);

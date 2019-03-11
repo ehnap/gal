@@ -70,7 +70,6 @@ protected:
 
 public slots:
 	void onDataChanged(const QString& key);
-	void onKeyChanged(const QString& key);
 
 protected slots:
 	void onItemDoubleClicked(QListWidgetItem* item);

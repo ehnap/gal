@@ -58,7 +58,6 @@ Mainbox::Mainbox(QWidget* parent/*= Q_NULLPTR*/)
 
 	m_pItemList->setMainDataSet(m_pMainDataSet);
 	connect(m_pInputEdit, &QLineEdit::textEdited, this, &Mainbox::textEdited);
-	connect(m_pInputEdit, &QLineEdit::textEdited, m_pItemList, &ResultListWidget::onKeyChanged);
 
 	QTimer::singleShot(0, this, &Mainbox::firstInit);
 }
@@ -103,31 +102,13 @@ bool Mainbox::execSearchEngine(const QString& key, const QString& value)
 void Mainbox::textEdited(const QString& t)
 {
 	QString k = t.trimmed();
-	if (k.contains(" "))
-	{
-		m_pItemList->clear();
-		adjustSize();
-		QString strKey = k.left(k.indexOf(" "));
-		QString strContent = k.mid(k.indexOf(" ") + 1);
-		if (searchEngineKeyFilter(strKey))
-		{
-			m_bSearchEngineState = true;
-			m_searchKey = strKey;
-			m_searchContent = strContent;
-		}
-		else
-		{
-			m_bSearchEngineState = false;
-			emit startPluginQuery(strKey, strContent);
-		}
-	}
-	else
-	{
-		m_bSearchEngineState = false;
-		m_pPluginWidget->hide();
-		adjustSize();
-		emit startSearchQuery(t);
-	}
+	m_pItemList->clear();
+	m_pPluginWidget->hide();
+	adjustSize();
+	m_bSearchEngineState = false;
+	searchEngineFilter(k)
+		|| pluginFilter(k)
+		|| fileFilter(k);
 }
 
 void Mainbox::firstInit()
@@ -226,7 +207,9 @@ void Mainbox::mouseMoveEvent(QMouseEvent* e)
 	if (m_bDrag)
 	{	
 		auto p = e->globalPos();
-		move(m_lastTopLeft.x() + p.x() - m_movablePoint.x(), m_lastTopLeft.y() + p.y() - m_movablePoint.y());
+		int p_x = m_lastTopLeft.x() + p.x() - m_movablePoint.x();
+		int p_y = m_lastTopLeft.y() + p.y() - m_movablePoint.y();
+		move(p_x, p_y);
 	}
 
 	QWidget::mouseMoveEvent(e);
@@ -280,4 +263,40 @@ void Mainbox::initSearchEngineTable()
 			}
 		}
 	}
+}
+
+bool Mainbox::searchEngineFilter(const QString& k)
+{
+	QString strKey = k.left(k.indexOf(" "));
+	QString strContent = k.mid(k.indexOf(" ") + 1);
+	if (searchEngineKeyFilter(strKey))
+	{
+		m_bSearchEngineState = true;
+		m_searchKey = strKey;
+		m_searchContent = strContent;
+		return true;
+	}
+	
+	return false;
+}
+
+bool Mainbox::pluginFilter(const QString& k)
+{
+	QString strKey = k.left(k.indexOf(" "));
+	QString strContent = k.mid(k.indexOf(" ") + 1);
+	if (m_pPluginManager->isPluginExist(strKey))
+	{
+		m_bSearchEngineState = false;
+		m_pPluginWidget->show();
+		emit startPluginQuery(strKey, strContent);
+		return true;
+	}
+	return false;
+}
+
+bool Mainbox::fileFilter(const QString& k)
+{
+	m_bSearchEngineState = false;
+	emit startSearchQuery(k);
+	return true;
 }
