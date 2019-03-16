@@ -15,6 +15,14 @@ class Mainbox : public QWidget
 	Q_OBJECT
 
 public:
+	enum class OmniState
+	{
+		File,
+		Search,
+		Plugin,
+		Command,
+	};
+
 	Mainbox(QWidget *parent = Q_NULLPTR);
 	~Mainbox();
 
@@ -42,6 +50,8 @@ protected:
 
 private:
 	void initSearchEngineTable();
+	void processInputWord(const QString& t);
+	void executeCommand();
 
 	bool searchEngineFilter(const QString& k);
 	bool pluginFilter(const QString& k);
@@ -56,13 +66,14 @@ private:
 
 private:
 	QHash<QString, QString> m_searchEngineTable;
-	bool m_bSearchEngineState;
 	QString m_searchKey;
 	QString m_searchContent;
+	OmniState m_currentState;
+	bool m_bSearchEngineState;
 
 private:
 	//drag
 	QPoint m_movablePoint;
 	QPoint m_lastTopLeft;
 	bool m_bDrag;
-};
+}
