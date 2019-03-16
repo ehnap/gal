@@ -53,6 +53,7 @@ private:
 	void processInputWord(const QString& t);
 	void executeCommand();
 
+	bool commandFilter(const QString& k);
 	bool searchEngineFilter(const QString& k);
 	bool pluginFilter(const QString& k);
 	bool fileFilter(const QString& k);
@@ -69,11 +70,10 @@ private:
 	QString m_searchKey;
 	QString m_searchContent;
 	OmniState m_currentState;
-	bool m_bSearchEngineState;
 
 private:
 	//drag
 	QPoint m_movablePoint;
 	QPoint m_lastTopLeft;
 	bool m_bDrag;
-}
+};

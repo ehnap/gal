@@ -19,7 +19,6 @@ Mainbox::Mainbox(QWidget* parent/*= Q_NULLPTR*/)
 	: QWidget(parent, Qt::FramelessWindowHint)
 	, m_bDrag(false)
 	, m_currentState(OmniState::File)
-	, m_bSearchEngineState(false)
 {
 	setAutoFillBackground(true);
 	QPalette p = palette();
@@ -102,6 +101,11 @@ bool Mainbox::execSearchEngine(const QString& key, const QString& value)
 
 void Mainbox::textEdited(const QString& t)
 {
+	m_pItemList->clear();
+	m_pPluginWidget->hide();
+	adjustSize();
+	m_currentState = OmniState::File;
+
 	processInputWord(t);
 }
 
@@ -275,7 +279,7 @@ bool Mainbox::searchEngineFilter(const QString& k)
 	QString strContent = k.mid(k.indexOf(" ") + 1);
 	if (searchEngineKeyFilter(strKey))
 	{
-		m_bSearchEngineState = true;
+		m_currentState = OmniState::Search;
 		m_searchKey = strKey;
 		m_searchContent = strContent;
 		return true;
@@ -290,7 +294,7 @@ bool Mainbox::pluginFilter(const QString& k)
 	QString strContent = k.mid(k.indexOf(" ") + 1);
 	if (m_pPluginManager->isPluginExist(strKey))
 	{
-		m_bSearchEngineState = false;
+		m_currentState = OmniState::Plugin;
 		m_pPluginWidget->show();
 		emit startPluginQuery(strKey, strContent);
 		return true;
@@ -300,7 +304,7 @@ bool Mainbox::pluginFilter(const QString& k)
 
 bool Mainbox::fileFilter(const QString& k)
 {
-	m_bSearchEngineState = false;
+	m_currentState = OmniState::File;
 	emit startSearchQuery(k);
 	return true;
 }
@@ -308,11 +312,8 @@ bool Mainbox::fileFilter(const QString& k)
 void Mainbox::processInputWord(const QString& t)
 {
 	QString k = t.trimmed();
-	m_pItemList->clear();
-	m_pPluginWidget->hide();
-	adjustSize();
-	m_bSearchEngineState = false;
-	searchEngineFilter(k)
+	commandFilter(k)
+		|| searchEngineFilter(k)
 		|| pluginFilter(k)
 		|| fileFilter(k);
 }
@@ -321,4 +322,17 @@ void Mainbox::executeCommand()
 {
 	QString s = "start cmd /k " + m_searchContent;
 	system(s.toStdString().c_str());
+}
+
+bool Mainbox::commandFilter(const QString& k)
+{
+	QString strKey = k.left(k.indexOf(" "));
+	QString strContent = k.mid(k.indexOf(" ") + 1);
+	if (strKey == ">")
+	{
+		m_currentState = OmniState::Command;
+		m_searchContent = strContent;
+		return true;
+	}
+	return false;
 }
