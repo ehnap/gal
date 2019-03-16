@@ -22,7 +22,7 @@ namespace
 		Data d;
 	};
 
-	bool greaterThanCount(TempData a, TempData b)
+	bool greaterThanCount(const TempData& a,const TempData& b)
 	{
 		return a.i > b.i;
 	}
@@ -32,6 +32,7 @@ ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	: QListWidget(parent)
 	, m_mainBox(parent)
 	, m_loadPoint(0)
+	, m_bCountHashDirty(false)
 {
 	setMouseTracking(true);
 	setFrameStyle(NoFrame);
@@ -49,13 +50,12 @@ ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	m_delayLoadTimer = new QTimer(this);
 	connect(m_delayLoadTimer, &QTimer::timeout, this, &ResultListWidget::onDelayLoad);
 	m_backupTimer = new QTimer(this);
-	m_backupTimer->setInterval(1000 * 60 * 30);
+	m_backupTimer->setInterval(1000 * 60);
 	connect(m_backupTimer, &QTimer::timeout, this, &ResultListWidget::saveDB);
 }
 
 ResultListWidget::~ResultListWidget()
 {
-	saveDB();
 }
 
 void ResultListWidget::next()
@@ -110,7 +110,12 @@ void ResultListWidget::delayShow()
 
 void ResultListWidget::addHitCount(const QString& key)
 {
-	m_countHashTable[key]++;
+	if (m_countHashTable.find(key) == m_countHashTable.end())
+		m_countHashTable.insert(key, 1);
+	else
+		m_countHashTable[key]++;
+
+	m_bCountHashDirty = true;
 }
 
 QSize ResultListWidget::sizeHint() const
@@ -242,7 +247,7 @@ void ResultListWidget::load()
 	while (i++ < 6 + 3 && m_dataSet->takeData(d, m_mainBox->queryKey()))
 	{
 		TempData td;
-		td.i = m_countHashTable.value(QDir::toNativeSeparators(d.path()));
+		td.i = m_countHashTable.value(QDir::toNativeSeparators(d.path()), -1);
 		td.d = d;
 		tempList.append(td);
 	}
@@ -263,6 +268,9 @@ void ResultListWidget::loadAll()
 
 void ResultListWidget::saveDB()
 {
+	if (!m_bCountHashDirty)
+		return;
+
 	QFile fData(qApp->applicationDirPath() + "\\config\\data.db");
 	if (fData.open(QFile::WriteOnly | QIODevice::Text))
 	{
@@ -270,12 +278,19 @@ void ResultListWidget::saveDB()
 		QHash<QString, int>::const_iterator i = m_countHashTable.constBegin();
 		QString lineContent;
 		while (i != m_countHashTable.constEnd()) {
-			lineContent = QString::number(i.value()) + " " + i.key();
-			out << lineContent << "\n";
+			QString hitCount = QString::number(i.value());
+			QString strPath = i.key();
+			if (!hitCount.isEmpty() && !strPath.isEmpty())
+			{
+				lineContent = QString::number(i.value()) + " " + i.key();
+				out << lineContent << "\n";
+			}
 			i++;
 		}
 		fData.close();
 	}
+
+	m_bCountHashDirty = false;
 }
 
 ResultItem::ResultItem(QListWidget* parent, const Data& data)

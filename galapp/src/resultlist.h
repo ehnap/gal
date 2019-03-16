@@ -92,5 +92,7 @@ private:
 	QTimer* m_delayLoadTimer;
 	QTimer* m_backupTimer;
 	Mainbox* m_mainBox;
+
 	QHash<QString, int> m_countHashTable;
+	bool m_bCountHashDirty;
 };
