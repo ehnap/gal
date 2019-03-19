@@ -263,14 +263,13 @@ void MainDataSet::queryResult(const QString& key)
 	if (key.isEmpty())
 		return;
 
-	DWORD i;
 	std::wstring s(key.toStdWString());
 	Everything_SetSearch(s.c_str());
 	Everything_SetMax(6 * 15);
 	Everything_Query(TRUE);
 
 	QFileIconProvider p;
-	for (i = 0; i < Everything_GetNumResults(); i++)
+	for (DWORD i = 0; i < Everything_GetNumResults(); i++)
 	{
 		QString strPath = QString::fromStdWString(Everything_GetResultPath(i));
 		QString strName = QString::fromStdWString(Everything_GetResultFileName(i));

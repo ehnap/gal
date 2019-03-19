@@ -96,6 +96,7 @@ void Mainbox::firstInit()
 
 bool Mainbox::event(QEvent* e)
 {
+#ifndef QT_DEBUG
 	if (e->type() == QEvent::WindowDeactivate)
 	{
 		m_pItemList->clear();
@@ -116,7 +117,7 @@ bool Mainbox::event(QEvent* e)
 			hide();
 		}
 	}
-
+#endif
 	return QWidget::event(e);
 }
 

@@ -284,7 +284,7 @@ void ResultListWidget::load()
 	while (i++ < 6 + 3 && m_omniFile->mainDataSet()->takeData(d, m_mainBox->queryKey()))
 	{
 		TempData td;
-		td.i = m_countTable.value(QDir::toNativeSeparators(d.path()), -1);
+		td.i = m_countTable.value(QDir::toNativeSeparators(d.path()), -i);
 		td.d = d;
 		tempList.append(td);
 	}
