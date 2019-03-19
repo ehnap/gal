@@ -35,7 +35,8 @@ SOURCES += \
     src/plugin.cpp \
     src/pluginmanager.cpp \
     src/pydata.cpp \
-    src/resultlist.cpp
+    src/resultlist.cpp \
+	src/omniobject.cpp
 
 HEADERS += \
     src/mainbox.h \
@@ -45,6 +46,7 @@ HEADERS += \
     src/pydata.h \
     src/resultlist.h \
     src/maintray.h \
+	src/omniobject.h \
     include/galcppfreeinterface.h \
     resource.h \
     thirdparty/everything/Everything.h

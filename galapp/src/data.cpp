@@ -237,8 +237,9 @@ void QuickLaunchTable::walkThroughDirHelper(QDir* d)
 	}
 }
 
-MainDataSet::MainDataSet()
-	: m_pQLTable(new QuickLaunchTable())
+MainDataSet::MainDataSet(QObject* parent /*= Q_NULLPTR*/)
+	: QObject(parent)
+	, m_pQLTable(new QuickLaunchTable())
 {
 	QTimer::singleShot(0, this, &MainDataSet::firstInit);
 }

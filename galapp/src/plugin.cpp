@@ -1,5 +1,6 @@
 #include "plugin.h"
 #include "pluginmanager.h"
+
 #include <QJSEngine>
 #include <QFile>
 #include <QTextStream>

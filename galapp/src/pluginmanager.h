@@ -6,7 +6,7 @@
 #include <QStackedWidget>
 
 class Plugin;
-
+class OmniPlugin;
 
 class PluginStackedWidget : public QStackedWidget
 {
@@ -18,9 +18,17 @@ public:
 
 	void extend();
 
+	QSharedPointer<OmniPlugin> getOmniPlugin() const;
+
+protected:
+	bool eventFilter(QObject* o, QEvent* e) override;
+
 private:
 	LabelPluginWidget* m_pLabelPWidget;
 	FreeWidget* m_pFreeWidget;
+
+private:
+	QSharedPointer<OmniPlugin> m_omniPlugin;
 };
 
 

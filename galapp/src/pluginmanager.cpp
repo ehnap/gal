@@ -1,9 +1,12 @@
 #include "pluginmanager.h"
+#include "omniobject.h"
+
 #include <QTimer>
 #include <QApplication>
 #include <QDir>
 #include <QSettings>
 #include <QThread>
+#include <QKeyEvent>
 
 PluginManager::PluginManager(QObject* parent /*= Q_NULLPTR*/)
 	: QObject(parent)
@@ -89,12 +92,16 @@ void PluginManager::init()
 
 PluginStackedWidget::PluginStackedWidget(QWidget* parent)
 	: QStackedWidget(parent)
+	, m_omniPlugin(new OmniPlugin())
 {
 	m_pLabelPWidget = new LabelPluginWidget(this);
 	m_pFreeWidget = new FreeWidget(this);
 
 	addWidget(m_pLabelPWidget);
 	addWidget(m_pFreeWidget);
+
+	m_omniPlugin->pluginManager()->setStackedWidget(this);
+	connect(m_omniPlugin.data(), &OmniPlugin::startPluginQuery, m_omniPlugin->pluginManager(), &PluginManager::onStartQuery);
 }
 
 void PluginStackedWidget::setCurrentWidget(Plugin::PluginType t)
@@ -141,4 +148,28 @@ void PluginStackedWidget::extend()
 	PluginWidget* pWidget = qobject_cast<PluginWidget*>(currentWidget());
 	if (pWidget)
 		pWidget->extend();
+}
+
+
+QSharedPointer<OmniPlugin> PluginStackedWidget::getOmniPlugin() const
+{
+	return m_omniPlugin;
+}
+
+bool PluginStackedWidget::eventFilter(QObject* o, QEvent* e)
+{
+	if (isVisible() && e->type() == QEvent::KeyPress)
+	{
+		QKeyEvent* ev = dynamic_cast<QKeyEvent*>(e);
+		if (ev)
+		{
+			if (ev->key() == Qt::Key_Right && ev->modifiers() & Qt::AltModifier)
+				extend();
+
+			if (ev->key() == Qt::Key_Escape)
+				hide();
+		}
+	}
+
+	return QStackedWidget::eventFilter(o, e);
 }

@@ -1,5 +1,7 @@
 #include "resultlist.h"
 #include "mainbox.h"
+#include "omniobject.h"
+
 #include <QProcess>
 #include <QPainter>
 #include <QTimer>
@@ -13,6 +15,7 @@
 #include <QClipboard>
 #include <QStandardItemModel>
 #include <QTextStream>
+#include <QKeyEvent>
 
 namespace
 {
@@ -32,7 +35,8 @@ ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	: QListWidget(parent)
 	, m_mainBox(parent)
 	, m_loadPoint(0)
-	, m_bCountHashDirty(false)
+	, m_bCountTableDirty(false)
+	, m_omniFile(new OmniFile())
 {
 	setMouseTracking(true);
 	setFrameStyle(NoFrame);
@@ -52,6 +56,8 @@ ResultListWidget::ResultListWidget(Mainbox* parent/*= Q_NULLPTR*/)
 	m_backupTimer = new QTimer(this);
 	m_backupTimer->setInterval(1000 * 60);
 	connect(m_backupTimer, &QTimer::timeout, this, &ResultListWidget::saveDB);
+
+	connect(m_omniFile->mainDataSet(), &MainDataSet::dataChanged, this, &ResultListWidget::onDataChanged);
 }
 
 ResultListWidget::~ResultListWidget()
@@ -97,11 +103,6 @@ void ResultListWidget::clear()
 	QListWidget::clear();
 }
 
-void ResultListWidget::setMainDataSet(MainDataSet* d)
-{
-	m_dataSet = d;
-}
-
 void ResultListWidget::delayShow()
 {
 	m_delayShowTimer->stop();
@@ -110,12 +111,18 @@ void ResultListWidget::delayShow()
 
 void ResultListWidget::addHitCount(const QString& key)
 {
-	if (m_countHashTable.find(key) == m_countHashTable.end())
-		m_countHashTable.insert(key, 1);
+	if (m_countTable.find(key) == m_countTable.end())
+		m_countTable.insert(key, 1);
 	else
-		m_countHashTable[key]++;
+		m_countTable[key]++;
 
-	m_bCountHashDirty = true;
+	m_bCountTableDirty = true;
+}
+
+
+QSharedPointer<OmniFile> ResultListWidget::getOmniFile() const
+{
+	return m_omniFile;
 }
 
 QSize ResultListWidget::sizeHint() const
@@ -125,6 +132,36 @@ QSize ResultListWidget::sizeHint() const
 	if (item(0))
 		h = c * item(0)->sizeHint().height();
 	return QSize(width(), h);
+}
+
+bool ResultListWidget::eventFilter(QObject* o, QEvent* e)
+{
+	if (isVisible() && e->type() == QEvent::KeyPress)
+	{
+		QKeyEvent* ev = dynamic_cast<QKeyEvent*>(e);
+		if (ev)
+		{
+			if (ev->key() == Qt::Key_Down)
+				next();
+
+			if (ev->key() == Qt::Key_Up)
+				prev();
+
+			if (ev->key() == Qt::Key_Right && ev->modifiers() & Qt::AltModifier)
+				extend();
+
+			if (ev->key() == Qt::Key_Escape)
+				clear();
+
+			if (ev->key() == Qt::Key_Return || ev->key() == Qt::Key_Enter)
+			{
+				shot();
+				clear();
+			}
+		}
+	}
+
+	return QListWidget::eventFilter(o, e);
 }
 
 void ResultListWidget::onItemDoubleClicked(QListWidgetItem* item)
@@ -226,7 +263,7 @@ void ResultListWidget::firstInit()
 			bool bOk = false;
 			int iCount = strCount.toInt(&bOk);
 			if (bOk && !strPath.isEmpty())
-				m_countHashTable.insert(strPath, iCount);
+				m_countTable.insert(strPath, iCount);
 			else
 			{
 				fData.close();
@@ -244,10 +281,10 @@ void ResultListWidget::load()
 	int i = 0;
 	Data d;
 	QList<TempData> tempList;
-	while (i++ < 6 + 3 && m_dataSet->takeData(d, m_mainBox->queryKey()))
+	while (i++ < 6 + 3 && m_omniFile->mainDataSet()->takeData(d, m_mainBox->queryKey()))
 	{
 		TempData td;
-		td.i = m_countHashTable.value(QDir::toNativeSeparators(d.path()), -1);
+		td.i = m_countTable.value(QDir::toNativeSeparators(d.path()), -1);
 		td.d = d;
 		tempList.append(td);
 	}
@@ -260,7 +297,7 @@ void ResultListWidget::load()
 void ResultListWidget::loadAll()
 {
 	Data d;
-	while (m_dataSet->takeData(d, m_mainBox->queryKey()))
+	while (m_omniFile->mainDataSet()->takeData(d, m_mainBox->queryKey()))
 	{
 		addItem(new ResultItem(this, d));
 	}
@@ -268,16 +305,16 @@ void ResultListWidget::loadAll()
 
 void ResultListWidget::saveDB()
 {
-	if (!m_bCountHashDirty)
+	if (!m_bCountTableDirty)
 		return;
 
 	QFile fData(qApp->applicationDirPath() + "\\config\\data.db");
-	if (fData.open(QFile::WriteOnly | QIODevice::Text))
+	if (fData.open(QFile::WriteOnly | QFile::Text | QFile::Truncate))
 	{
 		QTextStream out(&fData);
-		QHash<QString, int>::const_iterator i = m_countHashTable.constBegin();
+		QMap<QString, int>::const_iterator i = m_countTable.constBegin();
 		QString lineContent;
-		while (i != m_countHashTable.constEnd()) {
+		while (i != m_countTable.constEnd()) {
 			QString hitCount = QString::number(i.value());
 			QString strPath = i.key();
 			if (!hitCount.isEmpty() && !strPath.isEmpty())
@@ -290,7 +327,7 @@ void ResultListWidget::saveDB()
 		fData.close();
 	}
 
-	m_bCountHashDirty = false;
+	m_bCountTableDirty = false;
 }
 
 ResultItem::ResultItem(QListWidget* parent, const Data& data)

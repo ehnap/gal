@@ -77,7 +77,7 @@ class MainDataSet : public QObject
 	Q_OBJECT
 
 public:
-	MainDataSet();
+	MainDataSet(QObject* parent = Q_NULLPTR);
 	~MainDataSet();
 
 	void queryResult(const QString& key);

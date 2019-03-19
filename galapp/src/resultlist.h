@@ -7,6 +7,7 @@
 
 class MainDataSet;
 class Mainbox;
+class OmniFile;
 class QMenu;
 
 class ResultItem : public QObject, public QListWidgetItem
@@ -61,12 +62,14 @@ public:
 	void extend();
 
 	void clear();
-	void setMainDataSet(MainDataSet* d);
 	void delayShow();
 	void addHitCount(const QString& key);
 
+	QSharedPointer<OmniFile> getOmniFile() const;
+
 protected:
 	QSize sizeHint() const override;
+	bool eventFilter(QObject* o, QEvent* e) override;
 
 public slots:
 	void onDataChanged(const QString& key);
@@ -86,13 +89,14 @@ private:
 	void loadAll();
 
 private:
-	MainDataSet* m_dataSet;
 	int m_loadPoint;
 	QTimer* m_delayShowTimer;
 	QTimer* m_delayLoadTimer;
 	QTimer* m_backupTimer;
 	Mainbox* m_mainBox;
 
-	QHash<QString, int> m_countHashTable;
-	bool m_bCountHashDirty;
+	QMap<QString, int> m_countTable;
+	bool m_bCountTableDirty;
+
+	QSharedPointer<OmniFile> m_omniFile;
 };
