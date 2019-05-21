@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QTimer>
 
 OmniObject::OmniObject(OmniType ot, RespondType rt)
 	: m_omniType(ot)
@@ -67,7 +68,7 @@ OmniSearchEngine::OmniSearchEngine()
 	: QObject(Q_NULLPTR)
 	, OmniObject(OmniObject::OmniType::Search, OmniObject::RespondType::Delay)
 {
-
+	QTimer::singleShot(0, this, &OmniSearchEngine::firstInit);
 }
 
 OmniSearchEngine::~OmniSearchEngine()
@@ -77,7 +78,9 @@ OmniSearchEngine::~OmniSearchEngine()
 
 bool OmniSearchEngine::filter(const QString& k)
 {
-	auto it = m_searchEngineTable.find(k);
+	QString strKey = k.left(k.indexOf(" "));
+	QString strContent = k.mid(k.indexOf(" ") + 1);
+	auto it = m_searchEngineTable.find(strKey);
 	return it != m_searchEngineTable.end();
 }
 
