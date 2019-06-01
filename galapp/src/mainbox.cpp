@@ -62,7 +62,7 @@ Mainbox::~Mainbox()
 
 QString Mainbox::queryKey() const
 {
-	return m_pInputEdit->text().trimmed();
+	return m_pInputEdit->text();
 }
 
 void Mainbox::popUp()

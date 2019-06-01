@@ -1,6 +1,8 @@
 #pragma once
 
 #include "include/galcppfreeinterface.h"
+#include "include/galcpplistinterface.h"
+#include "gallistwidget.h"
 
 #include <QObject>
 #include <QWidget>
@@ -17,6 +19,7 @@ public:
 	{
 		JS_SIMPLE,
 		CPP_FREE,
+		CPP_SIMPLELIST,
 
 		UNKNOWN_TYPE,
 	};
@@ -36,8 +39,9 @@ public:
 	QString key() const;
 	QString dir() const;
 	QString author() const;
-	virtual void exec(const QString& content, QWidget* canvas) = 0;
-	virtual QWidget* widget() const = 0; //查询异步支持时会用得上
+	virtual void query(const QString& content, QWidget* canvas) = 0; //查询动作
+	virtual void exec(ListItem it) { Q_UNUSED(it); }
+	virtual QWidget* widget() const { return Q_NULLPTR; } //查询异步支持时会用得上
 	static PluginType getTypeFromStr(const QString& str);
 
 private:
@@ -49,23 +53,17 @@ private:
 	PluginType m_type;
 };
 
-class PluginWidget : public QWidget
+class PluginWidgetInterface
 {
-
-	Q_OBJECT
-
 public:
-	PluginWidget(PluginStackedWidget* parent);
-	virtual ~PluginWidget();
-
-	PluginStackedWidget* stackedWidget() const;
-	virtual void extend() = 0;
-
-private:
-	PluginStackedWidget* m_stackedWidget;
+	virtual void next() {}
+	virtual void prev() {}
+	virtual void shot() {}
+	virtual void clear() {}
+	virtual void extend() {}
 };
 
-class LabelPluginWidget : public PluginWidget
+class LabelPluginWidget : public QWidget, public PluginWidgetInterface
 {
 
 	Q_OBJECT
@@ -85,18 +83,54 @@ private:
 	QMenu* m_pMenu;
 };
 
+class FreeWidget : public QWidget, public PluginWidgetInterface
+{
+
+	Q_OBJECT
+
+public:
+	FreeWidget(PluginStackedWidget* parent);
+
+	void setHost(QWeakPointer<CppFreeInterface> cp);
+	void extend() override;
+
+protected:
+	void paintEvent(QPaintEvent* e) override;
+
+private:
+	QWeakPointer<CppFreeInterface> m_host;
+};
+
+class CppSimpleListWidget : public GalListWidget, public PluginWidgetInterface
+{
+
+	Q_OBJECT
+
+public:
+	CppSimpleListWidget(PluginStackedWidget* parent);
+
+	void setHost(QWeakPointer<CppSimpleListInterface> cp);
+
+	virtual void next() override;
+	virtual void prev() override;
+	virtual void shot() override;
+	virtual void clear() override;
+
+private:
+	QWeakPointer<CppSimpleListInterface> m_host;
+};
+
 class JsSimplePlugin : public Plugin
 {
 public:
-	JsSimplePlugin(QObject* parent, 
-		const QString& pluName, 
-		const QString& pluKey, 
-		const QString& pluVer, 
+	JsSimplePlugin(QObject* parent,
+		const QString& pluName,
+		const QString& pluKey,
+		const QString& pluVer,
 		const QString& pluAuthor,
 		const QString& pluDir);
 
-	void exec(const QString& content, QWidget* canvas) override;
-	QWidget* widget() const override;
+	void query(const QString& content, QWidget* canvas) override;
 
 private:
 	LabelPluginWidget* m_widget;
@@ -116,8 +150,7 @@ public:
 		const QString& pluAuthor,
 		const QString& pluDir);
 
-	void exec(const QString& content, QWidget* canvas) override;
-	QWidget* widget() const override;
+	void query(const QString& content, QWidget* canvas) override;
 
 private slots:
 	void firstInit();
@@ -127,20 +160,24 @@ private:
 	QSharedPointer<CppFreeInterface> m_interface;
 };
 
-class FreeWidget : public PluginWidget
+class CppSimpleListPlugin : public Plugin
 {
 
 	Q_OBJECT
 
 public:
-	FreeWidget(PluginStackedWidget* parent);
+	CppSimpleListPlugin(QObject* parent,
+		const QString& pluName,
+		const QString& pluKey,
+		const QString& pluVer,
+		const QString& pluAuthor,
+		const QString& pluDir);
 
-	void setHost(QWeakPointer<CppFreeInterface> cp);
+	void query(const QString& content, QWidget* canvas) override;
 
-	void extend() override;
-protected:
-	void paintEvent(QPaintEvent* e) override;
+private slots:
+	void firstInit();
 
 private:
-	QWeakPointer<CppFreeInterface> m_host;
+	QSharedPointer<CppSimpleListInterface> m_interface;
 };

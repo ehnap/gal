@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data.h"
+#include "gallistwidget.h"
 #include <QWidget>
 #include <QListWidget>
 #include <QItemDelegate>
@@ -10,45 +11,20 @@ class Mainbox;
 class OmniFile;
 class QMenu;
 
-class ResultItem : public QObject, public QListWidgetItem
+class ResultItem : public GalListItem
 {
-
-	Q_OBJECT
-
 public:
-	ResultItem(QListWidget* parent, const Data& data);
+	ResultItem(GalListWidget* parent, const Data& d);
 	~ResultItem();
 
-	void exec();
-	void extend();
-
-private slots:
-	void copyPath();
-	void copyDir();
-	void openDir();
-
-private:
-	void initMenu();
+	void exec() override;
+	Data data() const;
 
 private:
 	Data m_data;
-	QMenu* m_menu;
 };
 
-class ResultItemDelegate : public QItemDelegate
-{
-public:
-	explicit ResultItemDelegate(QObject* parent = nullptr);
-
-protected:
-	void paint(QPainter *painter,
-		const QStyleOptionViewItem &option,
-		const QModelIndex& index) const override;
-	QSize sizeHint(const QStyleOptionViewItem &option,
-		const QModelIndex &index) const override;
-};
-
-class ResultListWidget : public QListWidget
+class ResultListWidget : public GalListWidget
 {
 	Q_OBJECT
 
@@ -60,43 +36,34 @@ public:
 	void prev();
 	void shot();
 	void extend();
-
 	void clear();
-	void delayShow();
 	void addHitCount(const QString& key);
 
 	QSharedPointer<OmniFile> getOmniFile() const;
-
-protected:
-	QSize sizeHint() const override;
-	bool eventFilter(QObject* o, QEvent* e) override;
 
 public slots:
 	void onDataChanged(const QString& key);
 
 protected slots:
-	void onItemDoubleClicked(QListWidgetItem* item);
-	void onItemEntered(QListWidgetItem* item);
-	void onCurrentRowChanged(int currentRow);
-	void onDelayShow();
-	void onSliderMove();
-	void onDelayLoad();
 	void firstInit();
 	void saveDB();
 
-private:
-	void load();
-	void loadAll();
+protected:
+	bool eventFilter(QObject* o, QEvent* e) override;
+
+private slots:
+	void copyPath();
+	void copyDir();
+	void openDir();
 
 private:
-	int m_loadPoint;
-	QTimer* m_delayShowTimer;
-	QTimer* m_delayLoadTimer;
+	void initMenu();
+
+private:
 	QTimer* m_backupTimer;
 	Mainbox* m_mainBox;
-
+	QMenu* m_menu;
 	QMap<QString, int> m_countTable;
 	bool m_bCountTableDirty;
-
 	QSharedPointer<OmniFile> m_omniFile;
 };

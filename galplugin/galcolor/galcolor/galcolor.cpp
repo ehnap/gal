@@ -47,7 +47,7 @@ void GalColorPlugin::paint(QPainter* p, const QRect& r)
     p->restore();
 }
 
-void GalColorPlugin::exec(const QString& val)
+void GalColorPlugin::query(const QString& val)
 {
 	m_text = "Invalid Color";
 

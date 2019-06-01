@@ -66,6 +66,8 @@ Plugin::PluginType Plugin::getTypeFromStr(const QString& str)
 		return PluginType::JS_SIMPLE;
 	if (str.compare("CPP_FREE", Qt::CaseInsensitive) == 0)
 		return PluginType::CPP_FREE;
+	if (str.compare("CPP_SIMPLELIST", Qt::CaseInsensitive) == 0)
+		return PluginType::CPP_SIMPLELIST;
 
 	return PluginType::UNKNOWN_TYPE;
 }
@@ -77,7 +79,7 @@ JsSimplePlugin::JsSimplePlugin(QObject* parent, const QString& pluName, const QS
 	m_jsEngine = new QJSEngine();
 }
 
-void JsSimplePlugin::exec(const QString& content, QWidget* canvas)
+void JsSimplePlugin::query(const QString& content, QWidget* canvas)
 {
 	if (!canvas)
 		return;
@@ -101,14 +103,8 @@ void JsSimplePlugin::exec(const QString& content, QWidget* canvas)
 	}
 }
 
-QWidget* JsSimplePlugin::widget() const
-{
-	return m_widget;
-}
-
 LabelPluginWidget::LabelPluginWidget(PluginStackedWidget* parent)
-	: PluginWidget(parent)
-	, m_stackedWidget(parent)
+	: m_stackedWidget(parent)
 {
 	m_pResultLabel = new QLabel(this);
 	QFont f = m_pResultLabel->font();
@@ -134,7 +130,7 @@ LabelPluginWidget::LabelPluginWidget(PluginStackedWidget* parent)
 void LabelPluginWidget::setText(const QString& t)
 {
 	m_pResultLabel->setText(t);
-	stackedWidget()->parentWidget()->adjustSize();
+	m_stackedWidget->parentWidget()->adjustSize();
 }
 
 void LabelPluginWidget::extend()
@@ -151,22 +147,6 @@ void LabelPluginWidget::copyContent()
 	pClipboard->setText(m_pResultLabel->text());
 }
 
-PluginWidget::PluginWidget(PluginStackedWidget* parent)
-	: QWidget(parent)
-	, m_stackedWidget(parent)
-{
-}
-
-PluginWidget::~PluginWidget()
-{
-
-}
-
-PluginStackedWidget* PluginWidget::stackedWidget() const
-{
-	return m_stackedWidget;
-}
-
 CppFreePlugin::CppFreePlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
 	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_FREE)
 	, m_widget(Q_NULLPTR)
@@ -174,7 +154,7 @@ CppFreePlugin::CppFreePlugin(QObject* parent, const QString& pluName, const QStr
 	QTimer::singleShot(0, this, &CppFreePlugin::firstInit);
 }
 
-void CppFreePlugin::exec(const QString& content, QWidget* canvas)
+void CppFreePlugin::query(const QString& content, QWidget* canvas)
 {
 	if (!canvas)
 		return;
@@ -184,14 +164,9 @@ void CppFreePlugin::exec(const QString& content, QWidget* canvas)
 		pWidget->setHost(m_interface);
 
 	if (!m_interface.isNull())
-		m_interface->exec(content);
+		m_interface->query(content);
 
 	pWidget->update();
-}
-
-QWidget* CppFreePlugin::widget() const
-{
-	return m_widget;
 }
 
 void CppFreePlugin::firstInit()
@@ -207,7 +182,7 @@ void CppFreePlugin::firstInit()
 }
 
 FreeWidget::FreeWidget(PluginStackedWidget* parent)
-	: PluginWidget(parent)
+	: QWidget(parent)
 	, m_host(Q_NULLPTR)
 {
 
@@ -246,4 +221,107 @@ void FreeWidget::paintEvent(QPaintEvent* e)
 	}
 
 	QWidget::paintEvent(e);
+}
+
+CppSimpleListWidget::CppSimpleListWidget(PluginStackedWidget* parent)
+	: GalListWidget(parent)
+{
+
+}
+
+
+void CppSimpleListWidget::setHost(QWeakPointer<CppSimpleListInterface> cp)
+{
+	m_host = cp;
+}
+
+
+void CppSimpleListWidget::next()
+{
+	int r = currentRow();
+	++r;
+	r = qMin(count() - 1, r);
+	setCurrentRow(r);
+}
+
+
+void CppSimpleListWidget::prev()
+{
+	int r = currentRow();
+	--r;
+	r = qMax(0, r);
+	setCurrentRow(r);
+}
+
+void CppSimpleListWidget::shot()
+{
+	if (m_host.isNull())
+		return;
+	
+	CppSimpleListInterface* pInterface = m_host.data();
+	if (!pInterface)
+		return;
+
+	ListItem it;
+	GalListItem* pItem = dynamic_cast<GalListItem*>(currentItem());
+	if (!pItem)
+		return;
+
+	it.content = pItem->content();
+	it.icon = pItem->icon();
+	it.title = pItem->title();
+	pInterface->exec(it);
+}
+
+
+void CppSimpleListWidget::clear()
+{
+	hide();
+	GalListWidget::clear();
+}
+
+CppSimpleListPlugin::CppSimpleListPlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_SIMPLELIST)
+{
+	QTimer::singleShot(0, this, &CppSimpleListPlugin::firstInit);
+}
+
+void CppSimpleListPlugin::query(const QString& content, QWidget* canvas)
+{
+	if (!canvas)
+		return;
+
+	CppSimpleListWidget* pWidget = qobject_cast<CppSimpleListWidget*>(canvas);
+	if (!pWidget)
+		return;
+
+	if (m_interface.isNull())
+		return;
+
+	pWidget->setHost(m_interface);
+
+	auto itemList = m_interface->query(content);
+	pWidget->clear();
+	foreach(auto item, itemList)
+	{
+		GalListItem* pItem = new GalListItem(pWidget);
+		pItem->setTitle(item.title);
+		pItem->setIcon(item.icon);
+		pItem->setContent(item.content);
+		pWidget->addItem(pItem);
+	}
+	if (!itemList.isEmpty())
+		pWidget->show();
+}
+
+void CppSimpleListPlugin::firstInit()
+{
+	QString fileName = QDir::toNativeSeparators(dir() + "\\" + name() + ".dll");
+	QPluginLoader pluginLoader(fileName);
+	QObject* pObject = pluginLoader.instance();
+	if (pObject) {
+		CppSimpleListInterface* pInterface = qobject_cast<CppSimpleListInterface*>(pObject);
+		if (pInterface)
+			m_interface = QSharedPointer<CppSimpleListInterface>(pInterface);
+	}
 }

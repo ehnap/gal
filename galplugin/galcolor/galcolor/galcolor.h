@@ -13,7 +13,7 @@ class QAction;
 class GalColorPlugin : public QObject, CppFreeInterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "org.gal.galcolor.CppFreeInterface" FILE "galcolorplugin.json")
+    Q_PLUGIN_METADATA(IID "org.gal.galcolor.Plugin" FILE "galcolorplugin.json")
     Q_INTERFACES(CppFreeInterface)
 
 public:
@@ -21,7 +21,7 @@ public:
 	~GalColorPlugin();
 
     void paint(QPainter* p, const QRect& r) override;
-    void exec(const QString& val)override;
+    void query(const QString& val) override;
     QMenu* extentMenu() override;
 
 private slots:

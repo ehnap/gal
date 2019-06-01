@@ -22,42 +22,42 @@
 <context>
     <name>QObject</name>
     <message>
-        <location filename="../src/data.cpp" line="184"/>
+        <location filename="../src/data.cpp" line="187"/>
         <source>Control Panel</source>
         <translation>控制面板</translation>
     </message>
     <message>
-        <location filename="../src/data.cpp" line="188"/>
+        <location filename="../src/data.cpp" line="191"/>
         <source>My computer</source>
         <translation>我的电脑</translation>
     </message>
     <message>
-        <location filename="../src/data.cpp" line="192"/>
+        <location filename="../src/data.cpp" line="195"/>
         <source>My document</source>
         <translation>我的文档</translation>
     </message>
     <message>
-        <location filename="../src/data.cpp" line="196"/>
+        <location filename="../src/data.cpp" line="199"/>
         <source>Trash</source>
         <translation>回收站</translation>
     </message>
     <message>
-        <location filename="../src/resultlist.cpp" line="354"/>
+        <location filename="../src/resultlist.cpp" line="55"/>
         <source>&amp;Open Dir</source>
         <translation>打开所在目录</translation>
     </message>
     <message>
-        <location filename="../src/resultlist.cpp" line="357"/>
+        <location filename="../src/resultlist.cpp" line="58"/>
         <source>&amp;Copy Path</source>
         <translation>复制完整路径</translation>
     </message>
     <message>
-        <location filename="../src/resultlist.cpp" line="360"/>
+        <location filename="../src/resultlist.cpp" line="61"/>
         <source>&amp;Copy Dir</source>
         <translation>复制目录</translation>
     </message>
     <message>
-        <location filename="../src/plugin.cpp" line="128"/>
+        <location filename="../src/plugin.cpp" line="125"/>
         <source>&amp;Copy Content</source>
         <translation>复制内容</translation>
     </message>

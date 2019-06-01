@@ -1,3 +1,4 @@
+#include "plugin.h"
 #include "pluginmanager.h"
 #include "omniobject.h"
 
@@ -39,7 +40,7 @@ void PluginManager::onStartQuery(const QString& key, const QString& value)
 	//根据类型选择对应widget
 	m_stackedWidget->setCurrentWidget(p->type());
 	m_stackedWidget->show();
-	p->exec(value, m_stackedWidget->widget(p->type()));
+	p->query(value, m_stackedWidget->widget(p->type()));
 }
 
 void PluginManager::firstInit()
@@ -84,6 +85,12 @@ void PluginManager::init()
 					m_plugins.insert(strKey, p);
 					break;
 				}
+				case Plugin::PluginType::CPP_SIMPLELIST:
+				{
+					CppSimpleListPlugin* p = new CppSimpleListPlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
+					m_plugins.insert(strKey, p);
+					break;
+				}
 				}
 			}
 		}
@@ -96,9 +103,11 @@ PluginStackedWidget::PluginStackedWidget(QWidget* parent)
 {
 	m_pLabelPWidget = new LabelPluginWidget(this);
 	m_pFreeWidget = new FreeWidget(this);
+	m_pListWidget = new CppSimpleListWidget(this);
 
 	addWidget(m_pLabelPWidget);
 	addWidget(m_pFreeWidget);
+	addWidget(m_pListWidget);
 
 	m_omniPlugin->pluginManager()->setStackedWidget(this);
 	connect(m_omniPlugin.data(), &OmniPlugin::startPluginQuery, m_omniPlugin->pluginManager(), &PluginManager::onStartQuery);
@@ -113,6 +122,9 @@ void PluginStackedWidget::setCurrentWidget(Plugin::PluginType t)
 		break;
 	case Plugin::PluginType::CPP_FREE:
 		QStackedWidget::setCurrentWidget(m_pFreeWidget);
+		break;
+	case Plugin::PluginType::CPP_SIMPLELIST:
+		QStackedWidget::setCurrentWidget(m_pListWidget);
 		break;
 	case Plugin::PluginType::UNKNOWN_TYPE:
 		break;
@@ -132,6 +144,9 @@ QWidget* PluginStackedWidget::widget(Plugin::PluginType t)
 	case Plugin::PluginType::CPP_FREE:
 		pWidget = m_pFreeWidget;
 		break;
+	case Plugin::PluginType::CPP_SIMPLELIST:
+		pWidget = m_pListWidget;
+		break;
 	case Plugin::PluginType::UNKNOWN_TYPE:
 		break;
 	default:
@@ -145,7 +160,7 @@ void PluginStackedWidget::extend()
 	if (!isVisible())
 		return;
 
-	PluginWidget* pWidget = qobject_cast<PluginWidget*>(currentWidget());
+	PluginWidgetInterface* pWidget = dynamic_cast<PluginWidgetInterface*>(currentWidget());
 	if (pWidget)
 		pWidget->extend();
 }
@@ -168,8 +183,50 @@ bool PluginStackedWidget::eventFilter(QObject* o, QEvent* e)
 
 			if (ev->key() == Qt::Key_Escape)
 				hide();
+
+			if (ev->key() == Qt::Key_Down)
+				next();
+
+			if (ev->key() == Qt::Key_Up)
+				prev();
+
+			if (ev->key() == Qt::Key_Return || ev->key() == Qt::Key_Enter)
+			{
+				shot();
+				clear();
+			}
 		}
+		
 	}
 
 	return QStackedWidget::eventFilter(o, e);
+}
+
+void PluginStackedWidget::next()
+{
+	PluginWidgetInterface* pWidget = dynamic_cast<PluginWidgetInterface*>(currentWidget());
+	if (pWidget)
+		pWidget->next();
+}
+
+void PluginStackedWidget::prev()
+{
+	PluginWidgetInterface* pWidget = dynamic_cast<PluginWidgetInterface*>(currentWidget());
+	if (pWidget)
+		pWidget->prev();
+}
+
+void PluginStackedWidget::shot()
+{
+	PluginWidgetInterface* pWidget = dynamic_cast<PluginWidgetInterface*>(currentWidget());
+	if (pWidget)
+		pWidget->shot();
+}
+
+void PluginStackedWidget::clear()
+{
+	hide();
+	PluginWidgetInterface* pWidget = dynamic_cast<PluginWidgetInterface*>(currentWidget());
+	if (pWidget)
+		pWidget->clear();
 }

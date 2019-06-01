@@ -35,6 +35,7 @@ QStringList PyData::queryPy(const QChar& key) const
 
 QString PyData::getPy(const QString& key) const
 {
+	//todo 串匹配算法需要调整，目前在文件名过长且多音字比较多的情况 QString 会卡死
 	QString nameID = key;
 	nameID.replace(" ", QString());
 	QString resultId;

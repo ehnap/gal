@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="douyu.png">douyu.png</file>
+        <file alias="huya.ico">huya.ico</file>
+        <file alias="twitch.png">twitch.png</file>
+        <file alias="bilibili.ico">bilibili.ico</file>
+    </qresource>
+</RCC>

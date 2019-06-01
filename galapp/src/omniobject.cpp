@@ -80,6 +80,8 @@ bool OmniSearchEngine::filter(const QString& k)
 {
 	QString strKey = k.left(k.indexOf(" "));
 	QString strContent = k.mid(k.indexOf(" ") + 1);
+	if (strKey == k)
+		strContent = "";
 	auto it = m_searchEngineTable.find(strKey);
 	return it != m_searchEngineTable.end();
 }
@@ -88,6 +90,8 @@ void OmniSearchEngine::exec(const QString& k)
 {
 	QString strKey = k.left(k.indexOf(" "));
 	QString strValue = k.mid(k.indexOf(" ") + 1);
+	if (strKey == k)
+		strValue = "";
 	auto it = m_searchEngineTable.find(strKey);
 	if (it != m_searchEngineTable.end())
 	{
@@ -165,6 +169,8 @@ void OmniPlugin::exec(const QString& k)
 {
 	QString strKey = k.left(k.indexOf(" "));
 	QString strContent = k.mid(k.indexOf(" ") + 1);
+	if (strKey == k)
+		strContent = "";
  	emit startPluginQuery(strKey, strContent);
 }
 

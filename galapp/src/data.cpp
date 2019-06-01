@@ -90,6 +90,9 @@ QString Data::displayName() const
 
 QString Data::path() const
 {
+	if (m_type != Data::Type::Normal)
+		return m_name;
+
 	return QDir::toNativeSeparators(m_path + "/" + m_name);
 }
 

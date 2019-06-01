@@ -36,7 +36,8 @@ SOURCES += \
     src/pluginmanager.cpp \
     src/pydata.cpp \
     src/resultlist.cpp \
-	src/omniobject.cpp
+    src/omniobject.cpp \
+    src/gallistwidget.cpp
 
 HEADERS += \
     src/mainbox.h \
@@ -46,8 +47,10 @@ HEADERS += \
     src/pydata.h \
     src/resultlist.h \
     src/maintray.h \
-	src/omniobject.h \
+    src/omniobject.h \
+    src/gallistwidget.h \
     include/galcppfreeinterface.h \
+    include/galcpplistinterface.h \
     resource.h \
     thirdparty/everything/Everything.h
 
@@ -58,15 +61,15 @@ TRANSLATIONS = ts/galapp_zh_CN.ts
 CONFIG(debug, debug|release) {
     MOC_DIR += $$OUT_PWD/temp/debug/moc
     OBJECTS_DIR += $$OUT_PWD/temp/debug/obj
-    #QM_FILES_RESOURCE_PREFIX=$$OUT_PWD/debug/i18n/
+    QM_FILES_INSTALL_PATH=$$OUT_PWD/debug/i18n/ # QTBUG-76146 has not been solved
 }
 else {
     MOC_DIR += $$OUT_PWD/temp/release/moc
     OBJECTS_DIR += $$OUT_PWD/temp/release/obj
-    #QM_FILES_RESOURCE_PREFIX=$$OUT_PWD/release/i18n/
+    QM_FILES_INSTALL_PATH=$$OUT_PWD/release/i18n/ # QTBUG-76146 has not been solved
 }
 
-#CONFIG+=lrelease embed_translations   QTBUG-74004
+CONFIG += lrelease  #QTBUG-74004 require >= 5.12.3
 
 LIBS += User32.lib 
 LIBS += "$$PWD/thirdparty/everything/Everything64.lib"

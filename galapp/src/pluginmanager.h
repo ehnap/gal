@@ -17,6 +17,7 @@ public:
 	QWidget* widget(Plugin::PluginType t);
 
 	void extend();
+	
 
 	QSharedPointer<OmniPlugin> getOmniPlugin() const;
 
@@ -24,8 +25,15 @@ protected:
 	bool eventFilter(QObject* o, QEvent* e) override;
 
 private:
+	void next();
+	void prev();
+	void shot();
+	void clear();
+
+private:
 	LabelPluginWidget* m_pLabelPWidget;
 	FreeWidget* m_pFreeWidget;
+	CppSimpleListWidget* m_pListWidget;
 
 private:
 	QSharedPointer<OmniPlugin> m_omniPlugin;
