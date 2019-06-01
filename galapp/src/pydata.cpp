@@ -35,7 +35,6 @@ QStringList PyData::queryPy(const QChar& key) const
 
 QString PyData::getPy(const QString& key) const
 {
-	//todo 串匹配算法需要调整，目前在文件名过长且多音字比较多的情况 QString 会卡死
 	QString nameID = key;
 	nameID.replace(" ", QString());
 	QString resultId;
@@ -45,25 +44,103 @@ QString PyData::getPy(const QString& key) const
 		if (uni >= 0x4E00 && uni <= 0x9FA5)
 		{
 			QStringList l = PyData::GetInstance().queryPy(nameID[i]);
-			QStringList resultList;
-			for (int i = 0; i < l.count(); i++)
+			resultId += l.count() > 1 ? "{" : "";
+			for (int i = 0; i < l.count() - 1; i++)
 			{
-				QStringList tempList = resultId.split("|");
-				for (int j = 0; j < tempList.count(); j++)
-				{
-					tempList[j] += l[i];
-				}
-				resultList += tempList;
+				resultId += l[i] + "|";
 			}
-			resultId = resultList.join("|");
+			resultId += l[l.count() - 1];
+			resultId += l.count() > 1 ? "}" : "";
 		}
 		else
 		{
-			if (resultId.contains("|"))
-				resultId = resultId.replace("|", nameID[i] + QString("|"));
-			else
-				resultId += nameID[i];
+			resultId += nameID[i];
 		}
 	}
 	return resultId;
 }
+
+bool PyData::isEqual(const QString& key, const QString& data) const
+{
+	int iStart = 0;
+	int j = 0;
+	int k = 0;
+	int iKeyGuard = -1;
+	bool bStartMatch = false;
+	bool bTarget = false;
+	do
+	{
+		if (k >= key.length())
+			break;
+
+		if (bStartMatch)
+		{
+			if (key[k] == data[j])
+			{
+				k++;
+				if (k >= key.length())
+				{
+					bTarget = true;
+					break;
+				}
+			}
+			else if (data[j] == '{')
+			{
+				iKeyGuard = k;
+			}
+			else if (data[j] == '|')
+			{
+				do
+				{
+					j++;
+				} while (data[j] != '}');
+			}
+			else if (data[j] == '}')
+			{
+				iKeyGuard = -1;
+			}
+			else
+			{
+				// key[k] != data[j]
+				if (iKeyGuard == -1)
+				{
+					bStartMatch = false;
+					j = iStart;
+					k = 0;
+				}
+				else
+				{
+					k = iKeyGuard;
+					do
+					{
+						j++;
+						if (data[j] == '|')
+							break;
+
+						if (data[j] == '}')
+						{
+							bStartMatch = false;
+							j = iStart;
+							k = 0;
+							break;
+						}
+					} while (true);
+				}
+			}
+		}
+		else
+		{
+			k = 0;
+			if (key[k] == data[j])
+			{
+				iStart = j;
+				bStartMatch = true;
+				k++;
+			}
+		}
+		j++;
+	} while (j < data.count());
+
+	return bTarget;
+}
+

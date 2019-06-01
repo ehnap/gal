@@ -16,6 +16,7 @@ public:
 	void init();
 	QStringList queryPy(const QChar& key) const;
 	QString getPy(const QString& key) const;
+	bool isEqual(const QString& a, const QString& b) const;
 
 private:
 	PyData() {}

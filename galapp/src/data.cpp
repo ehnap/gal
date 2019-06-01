@@ -205,9 +205,9 @@ ResultQueue QuickLaunchTable::queryResult(const QString& key)
 	ResultQueue s;
 	for (auto it = m_items.begin(); it != m_items.end(); it++)
 	{
-		QString k = it.key();
+		QString id = it.key();
 		Data v = it.value();
-		if (k.contains(key, Qt::CaseInsensitive) || 
+		if (PyData::GetInstance().isEqual(key.toUpper(), id) ||
 			v.displayName().contains(key, Qt::CaseInsensitive) ||
 			v.name().contains(key, Qt::CaseInsensitive))
 			s << v;
