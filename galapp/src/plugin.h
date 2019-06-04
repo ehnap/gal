@@ -6,6 +6,9 @@
 
 #include <QObject>
 #include <QWidget>
+#include <QNetworkReply>
+
+class QJSEngine;
 
 class QJSEngine;
 class QLabel;
@@ -182,4 +185,63 @@ private slots:
 
 private:
 	QSharedPointer<CppSimpleListInterface> m_interface;
+};
+
+class QNetworkAccessManager;
+
+class GalNetReply : public QObject
+{
+public:
+	GalNetReply(QObject* parent);
+	~GalNetReply();
+
+	void setNetReply(QNetworkReply* pReply);
+	void setJsCallback(const QString& jsFunc);
+
+private slots:
+	void slotReadyRead();
+	void slotError(QNetworkReply::NetworkError code);
+	void slotSslErrors(const QList<QSslError> &errors);
+
+private:
+	QNetworkReply* m_pReply;
+	QString m_jsCallback;
+};
+
+class JsGalObject : public QObject
+{
+
+	Q_OBJECT
+
+public:
+	JsGalObject(QObject* parent);
+	~JsGalObject();
+
+	Q_INVOKABLE int httpGet(const QString& strUrl, const QString& jsCallBack);
+
+private slots:
+	void replyFinished(QNetworkReply* reply);
+
+private:
+	QNetworkAccessManager* m_pNetManager;
+};
+
+class JsSimpleListPlugin : public Plugin
+{
+
+	Q_OBJECT
+
+public:
+	JsSimpleListPlugin(QObject* parent,
+		const QString& pluName,
+		const QString& pluKey,
+		const QString& pluVer,
+		const QString& pluAuthor,
+		const QString& pluDir);
+
+	void query(const QString& content, QWidget* canvas) override;
+
+private:
+	QJSEngine* m_jsEngine;
+	GalListWidget* m_pListWidget;
 };

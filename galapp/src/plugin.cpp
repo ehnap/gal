@@ -344,3 +344,101 @@ void CppSimpleListPlugin::firstInit()
 			m_interface = QSharedPointer<CppSimpleListInterface>(pInterface);
 	}
 }
+
+JsSimpleListPlugin::JsSimpleListPlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_SIMPLELIST)
+{
+	m_jsEngine = new QJSEngine();
+	QJSValue jsMetaObject = m_jsEngine->newQMetaObject(&JsGalObject::staticMetaObject);
+	m_jsEngine->globalObject().setProperty("GalApp", jsMetaObject);
+}
+
+void JsSimpleListPlugin::query(const QString& content, QWidget* canvas)
+{
+	if (!canvas)
+		return;
+
+	QString fileName = QDir::toNativeSeparators(dir() + "\\" + "main.js");
+	QFile scriptFile(fileName);
+	if (!scriptFile.open(QIODevice::ReadOnly))
+		return;
+	QTextStream stream(&scriptFile);
+	QString strFuncContents = stream.readAll();
+	scriptFile.close();
+	m_jsEngine->evaluate(strFuncContents);
+}
+
+
+JsGalObject::JsGalObject(QObject* parent)
+	: QObject(parent)
+{
+	m_pNetManager = new QNetworkAccessManager(this);
+	connect(m_pNetManager, &QNetworkAccessManager::finished,
+		this, &JsGalObject::replyFinished);
+
+}
+
+JsGalObject::~JsGalObject()
+{
+
+}
+
+Q_INVOKABLE int JsGalObject::httpGet(const QString& strUrl, const QString& jsCallBack)
+{
+	QNetworkReply* pReply = m_pNetManager->get(QNetworkRequest(QUrl(strUrl)));
+	GalNetReply* pGalReply = new GalNetReply(this);
+	pGalReply->setNetReply(pReply);
+
+	return 0;
+}
+
+void JsGalObject::replyFinished(QNetworkReply* reply)
+{
+	if (reply->isFinished())
+	{
+		QByteArray ba = reply->readAll();
+
+	}
+}
+
+GalNetReply::GalNetReply(QObject* parent)
+	: QObject(parent)
+{
+
+}
+
+GalNetReply::~GalNetReply()
+{
+
+}
+
+void GalNetReply::setNetReply(QNetworkReply* pReply)
+{
+	m_pReply = pReply;
+	connect(m_pReply, &QIODevice::readyRead, this, &GalNetReply::slotReadyRead);
+	connect(m_pReply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
+		this, &GalNetReply::slotError);
+	connect(m_pReply, &QNetworkReply::sslErrors,
+		this, &GalNetReply::slotSslErrors);
+}
+
+
+void GalNetReply::setJsCallback(const QString& jsFunc)
+{
+	m_jsCallback = jsFunc;
+}
+
+void GalNetReply::slotReadyRead()
+{
+
+}
+
+void GalNetReply::slotError(QNetworkReply::NetworkError code)
+{
+
+}
+
+void GalNetReply::slotSslErrors(const QList<QSslError> &errors)
+{
+
+}
