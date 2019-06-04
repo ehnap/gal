@@ -119,12 +119,15 @@ void PluginStackedWidget::setCurrentWidget(Plugin::PluginType t)
 	{
 	case Plugin::PluginType::JS_SIMPLE:
 		QStackedWidget::setCurrentWidget(m_pLabelPWidget);
+		updateGeometry();
 		break;
 	case Plugin::PluginType::CPP_FREE:
 		QStackedWidget::setCurrentWidget(m_pFreeWidget);
+		updateGeometry();
 		break;
 	case Plugin::PluginType::CPP_SIMPLELIST:
 		QStackedWidget::setCurrentWidget(m_pListWidget);
+		updateGeometry();
 		break;
 	case Plugin::PluginType::UNKNOWN_TYPE:
 		break;

@@ -72,6 +72,11 @@ void Mainbox::popUp()
 	::SetForegroundWindow(hWnd);
 }
 
+OmniObject::OmniType Mainbox::currentOmniType() const
+{
+	return m_omniObjects[m_currentObjectIndex]->omniType();
+}
+
 void Mainbox::textEdited(const QString& t)
 {
 	Q_UNUSED(t);

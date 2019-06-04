@@ -61,7 +61,7 @@ public:
 	int visibleItemCount() const;
 
 	void addItem(GalListItem* item);
-	
+	virtual void clear();
 
 protected:
 	QSize sizeHint() const override;

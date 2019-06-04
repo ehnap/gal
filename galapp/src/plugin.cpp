@@ -184,6 +184,7 @@ void CppFreePlugin::firstInit()
 FreeWidget::FreeWidget(PluginStackedWidget* parent)
 	: QWidget(parent)
 	, m_host(Q_NULLPTR)
+	, m_heightHint(-1)
 {
 
 }
@@ -191,6 +192,11 @@ FreeWidget::FreeWidget(PluginStackedWidget* parent)
 void FreeWidget::setHost(QWeakPointer<CppFreeInterface> cp)
 {
 	m_host = cp;
+	CppFreeInterface* pInterface = m_host.data();
+	if (!pInterface)
+		m_heightHint = -1;
+	else
+		m_heightHint = pInterface->heightHint();
 }
 
 void FreeWidget::extend()
@@ -199,6 +205,9 @@ void FreeWidget::extend()
 		return;
 
 	CppFreeInterface* pInterface = m_host.data();
+	if (!pInterface)
+		return;
+
 	QMenu* pMenu = pInterface->extentMenu();
 	if (pMenu)
 	{
@@ -221,6 +230,16 @@ void FreeWidget::paintEvent(QPaintEvent* e)
 	}
 
 	QWidget::paintEvent(e);
+}
+
+
+QSize FreeWidget::sizeHint() const
+{
+	QSize sz = QWidget::sizeHint();
+	if (m_heightHint > -1)
+		sz.setHeight(m_heightHint);
+
+	return sz;
 }
 
 CppSimpleListWidget::CppSimpleListWidget(PluginStackedWidget* parent)

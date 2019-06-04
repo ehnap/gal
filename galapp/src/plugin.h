@@ -96,9 +96,11 @@ public:
 
 protected:
 	void paintEvent(QPaintEvent* e) override;
+	QSize sizeHint() const override;
 
 private:
 	QWeakPointer<CppFreeInterface> m_host;
+	int m_heightHint;
 };
 
 class CppSimpleListWidget : public GalListWidget, public PluginWidgetInterface

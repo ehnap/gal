@@ -13,6 +13,7 @@ class CppFreeInterface
 public:
     virtual ~CppFreeInterface() {}
 
+	virtual int heightHint() { return 56; }
 	virtual void paint(QPainter* p, const QRect& r) = 0;
 	virtual void query(const QString& val) = 0;
     virtual QMenu* extentMenu() { return Q_NULLPTR; }

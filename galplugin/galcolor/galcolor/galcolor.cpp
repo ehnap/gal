@@ -51,6 +51,9 @@ void GalColorPlugin::query(const QString& val)
 {
 	m_text = "Invalid Color";
 
+	if (val.length() <= 0)
+		return;
+
 	QColor tc = processColorString(val, ' ');
 	if (tc.isValid())
 	{

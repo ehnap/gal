@@ -36,7 +36,7 @@ public:
 	void prev();
 	void shot();
 	void extend();
-	void clear();
+	void clear() override;
 	void addHitCount(const QString& key);
 
 	QSharedPointer<OmniFile> getOmniFile() const;

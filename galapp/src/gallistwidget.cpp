@@ -123,6 +123,14 @@ void GalListWidget::addItem(GalListItem* pItem)
 	load();
 }
 
+void GalListWidget::clear()
+{
+	QListWidget::clear();
+	updateGeometry();
+	parentWidget()->adjustSize();
+	update();
+}
+
 GalListItem::GalListItem(GalListWidget* parent)
 	: QListWidgetItem(parent)
 {

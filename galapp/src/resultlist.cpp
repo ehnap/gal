@@ -88,8 +88,8 @@ void ResultListWidget::prev()
 
 void ResultListWidget::clear()
 {
+	GalListWidget::clear();
 	hide();
-	QListWidget::clear();
 }
 
 void ResultListWidget::extend()
@@ -155,6 +155,13 @@ QSharedPointer<OmniFile> ResultListWidget::getOmniFile() const
 void ResultListWidget::onDataChanged(const QString& key)
 {
 	Q_UNUSED(key);
+
+	if (m_mainBox->currentOmniType() != OmniObject::OmniType::File)
+	{
+		clear();
+		return;
+	}
+
 	int i = 0;
 	Data d;
 	QList<TempData> tempList;

@@ -2,13 +2,13 @@
 
 #include <QWidget>
 #include <QHash>
+#include "omniobject.h"
 
 class QLineEdit;
 class ResultListWidget;
 class MainDataSet;
 class PluginManager;
 class PluginStackedWidget;
-class OmniObject;
 
 class Mainbox : public QWidget
 {
@@ -21,6 +21,7 @@ public:
 
 	QString queryKey() const;
 	void popUp();
+	OmniObject::OmniType currentOmniType() const;
 
 protected slots:
 	void textEdited(const QString& t);
