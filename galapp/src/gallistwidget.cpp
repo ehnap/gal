@@ -72,6 +72,14 @@ QSize GalListWidget::sizeHint() const
 	return QSize(width(), h);
 }
 
+void GalListWidget::showEvent(QShowEvent* e)
+{
+	if (count() > 0)
+		setCurrentRow(0);
+
+	QListWidget::showEvent(e);
+}
+
 void GalListWidget::onItemDoubleClicked(QListWidgetItem* item)
 {
 	Q_UNUSED(item);
