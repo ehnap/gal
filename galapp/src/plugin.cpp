@@ -396,6 +396,10 @@ void JsGalObject::replyFinished(QNetworkReply* reply)
 {
 	if (reply->isFinished())
 	{
+		GalNetReply* pReply = qobject_cast<GalNetReply*>(reply);
+		if (!pReply)
+			return;
+
 		QByteArray ba = reply->readAll();
 
 	}
