@@ -183,19 +183,19 @@ void QuickLaunchTable::init()
 void QuickLaunchTable::sys_init()
 {
 	QFileIconProvider p;
-	QString id = "kongzhimianban";
+	QString id = "KONGZHIMIANBAN";
 	Data cpData(Data::Type::Sys_controlpanel, id, QObject::tr("Control Panel"), QObject::tr("Control Panel"), p.icon(QFileIconProvider::Computer));
 	m_items.insert(id, cpData);
 
-	id = "wodediannao|jisuanji";
+	id = "{WODEDIANNAO|JISUANJI}";
 	Data mcData(Data::Type::Sys_computer, id, QObject::tr("My computer"), QObject::tr("My computer"), p.icon(QFileIconProvider::Computer));
 	m_items.insert(id, mcData);
 
-	id = "wodewendang";
+	id = "WODEWENDANG";
 	Data mdData(Data::Type::Sys_document, id, QObject::tr("My document"), QObject::tr("My document"), p.icon(QFileIconProvider::Folder));
 	m_items.insert(id, mdData);
 
-	id = "huishouzhan";
+	id = "HUISHOUZHAN";
 	Data tcData(Data::Type::Sys_trash, id, QObject::tr("Trash"), QObject::tr("Trash"), p.icon(QFileIconProvider::Trashcan));
 	m_items.insert(id, tcData);
 }

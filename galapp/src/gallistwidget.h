@@ -65,6 +65,7 @@ public:
 
 protected:
 	QSize sizeHint() const override;
+	void showEvent(QShowEvent* e) override;
 
 protected slots:
 	void onItemDoubleClicked(QListWidgetItem* item);

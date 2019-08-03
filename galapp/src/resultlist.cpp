@@ -303,6 +303,8 @@ void ResultItem::exec()
 		{
 			QProcess process;
 			process.setProgram(fullPath);
+			// 一些app例如obs，不设置工作目录，程序运行不正确
+			process.setWorkingDirectory(fi.dir().path()); 
 			process.startDetached();
 		}
 		else if (fi.isDir())
