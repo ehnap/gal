@@ -1,4 +1,4 @@
-#include "mainbox.h"
+﻿#include "mainbox.h"
 #include "pydata.h"
 #include "maintray.h"
 #include <QtWidgets/QApplication>

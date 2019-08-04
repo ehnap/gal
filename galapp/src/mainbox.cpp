@@ -1,4 +1,4 @@
-#include "mainbox.h"
+﻿#include "mainbox.h"
 #include "data.h"
 #include "resultlist.h"
 #include "pluginmanager.h"
@@ -130,13 +130,16 @@ void Mainbox::keyPressEvent(QKeyEvent* e)
 {
 	if (e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
 	{
-		if (m_omniObjects[m_currentObjectIndex]->respondType() == OmniObject::RespondType::Delay)
-		{
-			m_omniObjects[m_currentObjectIndex]->execEx(queryKey());
-		}
-		m_pInputEdit->clear();
+		QString k = queryKey().trimmed();
+		if (m_omniObjects[m_currentObjectIndex]->respondType(k) == OmniObject::RespondType::Delay)
+			m_omniObjects[m_currentObjectIndex]->execEx(k);
+		else
+			m_pInputEdit->clear();
+			
 		adjustSize();
-		hide();	
+
+		if (m_omniObjects[m_currentObjectIndex]->respondType(k) != OmniObject::RespondType::Delay)
+			hide();
 	}
 
 	if (e->key() == Qt::Key_Escape)
@@ -203,7 +206,7 @@ void Mainbox::processInputWord(const QString& t)
 		if (m_omniObjects[i]->filter(t))
 		{
 			m_currentObjectIndex = i;
-			if (m_omniObjects[i]->respondType() == OmniObject::RespondType::Real)
+			if (m_omniObjects[i]->respondType(k) == OmniObject::RespondType::Real)
 				m_omniObjects[i]->execEx(k);
 			break;
 		}

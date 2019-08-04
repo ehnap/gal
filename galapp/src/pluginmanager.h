@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "plugin.h"
 #include <QObject>
@@ -51,6 +51,7 @@ public:
 
 	void setStackedWidget(PluginStackedWidget* pWidget);
 	bool isPluginExist(const QString& key);
+	Plugin* queryPlugin(const QString& key) const;
 
 public slots:
 	void onStartQuery(const QString& key, const QString& value);
@@ -60,6 +61,7 @@ private slots:
 
 private:
 	void init();
+	void execQuery(Plugin* pPlugin, const QString& value);
 
 private:
 	QMap<QString, Plugin*> m_plugins;

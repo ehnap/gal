@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <QString>
 #include <QHash>
@@ -28,7 +28,7 @@ public:
 
 	void execEx(const QString& k);
 	OmniType omniType() const;
-	RespondType respondType() const;
+	virtual RespondType respondType(const QString& k = "") const;
 
 	virtual bool filter(const QString& k) = 0;
 
@@ -86,6 +86,7 @@ public:
 	~OmniPlugin();
 
 	virtual bool filter(const QString& k) override;
+	RespondType respondType(const QString& k) const override;
 
 	PluginManager* pluginManager() const;
 

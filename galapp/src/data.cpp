@@ -1,4 +1,4 @@
-#include "data.h"
+﻿#include "data.h"
 #include "pydata.h"
 #include "resultlist.h"
 #include "Everything.h"

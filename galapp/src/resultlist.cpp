@@ -1,4 +1,4 @@
-#include "resultlist.h"
+ï»¿#include "resultlist.h"
 #include "mainbox.h"
 #include "omniobject.h"
 
@@ -303,7 +303,7 @@ void ResultItem::exec()
 		{
 			QProcess process;
 			process.setProgram(fullPath);
-			// Ò»Ğ©appÀıÈçobs£¬²»ÉèÖÃ¹¤×÷Ä¿Â¼£¬³ÌĞòÔËĞĞ²»ÕıÈ·
+			// ä¸€äº›appä¾‹å¦‚obsï¼Œä¸è®¾ç½®å·¥ä½œç›®å½•ï¼Œç¨‹åºè¿è¡Œä¸æ­£ç¡®
 			process.setWorkingDirectory(fi.dir().path()); 
 			process.startDetached();
 		}

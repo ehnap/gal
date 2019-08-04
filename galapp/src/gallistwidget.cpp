@@ -1,4 +1,4 @@
-#include "gallistwidget.h"
+﻿#include "gallistwidget.h"
 #include "mainbox.h"
 #include "omniobject.h"
 

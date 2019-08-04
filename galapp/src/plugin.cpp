@@ -1,4 +1,4 @@
-#include "plugin.h"
+﻿#include "plugin.h"
 #include "pluginmanager.h"
 
 #include <QJSEngine>
@@ -15,7 +15,10 @@
 #include <QTimer>
 #include <QPluginLoader>
 
-Plugin::Plugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir, PluginType t)
+Plugin::Plugin(QObject* parent, const QString& pluName, 
+	const QString& pluKey, const QString& pluVer, 
+	const QString& pluAuthor, const QString& pluDir, 
+	PluginType t, OmniObject::RespondType rt /*= OmniObject::RespondType::Real*/)
 	: QObject(parent)
 	, m_key(pluKey)
 	, m_name(pluName)
@@ -23,11 +26,18 @@ Plugin::Plugin(QObject* parent, const QString& pluName, const QString& pluKey, c
 	, m_author(pluAuthor)
 	, m_dir(pluDir)
 	, m_type(t)
+	, m_respondType(rt)
 {
 }
 
 Plugin::~Plugin()
 {
+}
+
+
+OmniObject::RespondType Plugin::respondType() const
+{
+	return m_respondType;
 }
 
 Plugin::PluginType Plugin::type() const
@@ -72,8 +82,11 @@ Plugin::PluginType Plugin::getTypeFromStr(const QString& str)
 	return PluginType::UNKNOWN_TYPE;
 }
 
-JsSimplePlugin::JsSimplePlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
-	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::JS_SIMPLE)
+JsSimplePlugin::JsSimplePlugin(QObject* parent, const QString& pluName, 
+	const QString& pluKey, const QString& pluVer, 
+	const QString& pluAuthor, const QString& pluDir,
+	OmniObject::RespondType rt /*= OmniObject::RespondType::Real*/)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::JS_SIMPLE, rt)
 	, m_widget(Q_NULLPTR)
 {
 	m_jsEngine = new QJSEngine();
@@ -147,8 +160,11 @@ void LabelPluginWidget::copyContent()
 	pClipboard->setText(m_pResultLabel->text());
 }
 
-CppFreePlugin::CppFreePlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
-	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_FREE)
+CppFreePlugin::CppFreePlugin(QObject* parent, const QString& pluName, 
+	const QString& pluKey, const QString& pluVer, 
+	const QString& pluAuthor, const QString& pluDir,
+	OmniObject::RespondType rt /*= OmniObject::RespondType::Real*/)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_FREE, rt)
 	, m_widget(Q_NULLPTR)
 {
 	QTimer::singleShot(0, this, &CppFreePlugin::firstInit);
@@ -299,8 +315,11 @@ void CppSimpleListWidget::clear()
 	GalListWidget::clear();
 }
 
-CppSimpleListPlugin::CppSimpleListPlugin(QObject* parent, const QString& pluName, const QString& pluKey, const QString& pluVer, const QString& pluAuthor, const QString& pluDir)
-	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_SIMPLELIST)
+CppSimpleListPlugin::CppSimpleListPlugin(QObject* parent, const QString& pluName, 
+	const QString& pluKey, const QString& pluVer, 
+	const QString& pluAuthor, const QString& pluDir,
+	OmniObject::RespondType rt /*= OmniObject::RespondType::Real*/)
+	: Plugin(parent, pluName, pluKey, pluVer, pluAuthor, pluDir, Plugin::PluginType::CPP_SIMPLELIST, rt)
 {
 	QTimer::singleShot(0, this, &CppSimpleListPlugin::firstInit);
 }

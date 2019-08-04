@@ -1,4 +1,4 @@
-#include "plugin.h"
+ï»¿#include "plugin.h"
 #include "pluginmanager.h"
 #include "omniobject.h"
 
@@ -28,6 +28,12 @@ void PluginManager::setStackedWidget(PluginStackedWidget* pWidget)
 bool PluginManager::isPluginExist(const QString& key)
 {
 	Plugin* p = m_plugins.value(key);
+	return p != Q_NULLPTR;
+}
+
+Plugin* PluginManager::queryPlugin(const QString& key) const
+{
+	Plugin* p = m_plugins.value(key);
 	return p;
 }
 
@@ -37,10 +43,7 @@ void PluginManager::onStartQuery(const QString& key, const QString& value)
 	if (!p)
 		return;
 
-	//¸ù¾ÝÀàÐÍÑ¡Ôñ¶ÔÓ¦widget
-	m_stackedWidget->setCurrentWidget(p->type());
-	m_stackedWidget->show();
-	p->query(value, m_stackedWidget->widget(p->type()));
+	execQuery(p, value);
 }
 
 void PluginManager::firstInit()
@@ -71,23 +74,25 @@ void PluginManager::init()
 				QString strVer = configSetting.value("version").toString();
 				QString strAuthor = configSetting.value("author").toString();
 				Plugin::PluginType t = Plugin::getTypeFromStr(configSetting.value("type").toString());
+				OmniObject::RespondType rt = configSetting.value("respondtype").toString() == "delay" ? 
+					OmniObject::RespondType::Delay : OmniObject::RespondType::Real;
 				switch (t)
 				{
 				case Plugin::PluginType::JS_SIMPLE:
 				{
-					JsSimplePlugin* p = new JsSimplePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
+					JsSimplePlugin* p = new JsSimplePlugin(this, strName, strKey, strVer, strAuthor, info.filePath(), rt);
 					m_plugins.insert(strKey, p);
 					break;
 				}
 				case Plugin::PluginType::CPP_FREE:
 				{
-					CppFreePlugin* p = new CppFreePlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
+					CppFreePlugin* p = new CppFreePlugin(this, strName, strKey, strVer, strAuthor, info.filePath(), rt);
 					m_plugins.insert(strKey, p);
 					break;
 				}
 				case Plugin::PluginType::CPP_SIMPLELIST:
 				{
-					CppSimpleListPlugin* p = new CppSimpleListPlugin(this, strName, strKey, strVer, strAuthor, info.filePath());
+					CppSimpleListPlugin* p = new CppSimpleListPlugin(this, strName, strKey, strVer, strAuthor, info.filePath(), rt);
 					m_plugins.insert(strKey, p);
 					break;
 				}
@@ -95,6 +100,14 @@ void PluginManager::init()
 			}
 		}
 	}
+}
+
+void PluginManager::execQuery(Plugin* pPlugin, const QString& value)
+{
+	//æ ¹æ®ç±»åž‹é€‰æ‹©å¯¹åº”widget
+	m_stackedWidget->setCurrentWidget(pPlugin->type());
+	m_stackedWidget->show();
+	pPlugin->query(value, m_stackedWidget->widget(pPlugin->type()));
 }
 
 PluginStackedWidget::PluginStackedWidget(QWidget* parent)

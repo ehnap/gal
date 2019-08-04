@@ -1,4 +1,4 @@
-#include "pydata.h"
+﻿#include "pydata.h"
 #include <QFile>
 
 void PyData::init()

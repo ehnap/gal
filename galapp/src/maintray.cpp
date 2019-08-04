@@ -1,4 +1,4 @@
-#include "maintray.h"
+﻿#include "maintray.h"
 #include "mainbox.h"
 #include <QMenu>
 #include <QApplication>

@@ -1,8 +1,9 @@
-#pragma once
+Ôªø#pragma once
 
 #include "include/galcppfreeinterface.h"
 #include "include/galcpplistinterface.h"
 #include "gallistwidget.h"
+#include "omniobject.h"
 
 #include <QObject>
 #include <QWidget>
@@ -30,18 +31,20 @@ public:
 		const QString& pluVer, 
 		const QString& pluAuthor,
 		const QString& pluDir, 
-		PluginType t);
+		PluginType t,
+		OmniObject::RespondType rt = OmniObject::RespondType::Real);
 	virtual ~Plugin();
 
+	OmniObject::RespondType respondType() const;
 	PluginType type() const;
 	QString name() const;
 	QString version() const;
 	QString key() const;
 	QString dir() const;
 	QString author() const;
-	virtual void query(const QString& content, QWidget* canvas) = 0; //≤È—Ø∂Ø◊˜
+	virtual void query(const QString& content, QWidget* canvas) = 0; //Êü•ËØ¢Âä®‰Ωú
 	virtual void exec(ListItem it) { Q_UNUSED(it); }
-	virtual QWidget* widget() const { return Q_NULLPTR; } //≤È—Ø“Ï≤Ω÷ß≥÷ ±ª·”√µ√…œ
+	virtual QWidget* widget() const { return Q_NULLPTR; } //Êü•ËØ¢ÂºÇÊ≠•ÊîØÊåÅÊó∂‰ºöÁî®Âæó‰∏ä
 	static PluginType getTypeFromStr(const QString& str);
 
 private:
@@ -51,6 +54,7 @@ private:
 	QString m_author;
 	QString m_dir;
 	PluginType m_type;
+	OmniObject::RespondType m_respondType;
 };
 
 class PluginWidgetInterface
@@ -130,7 +134,8 @@ public:
 		const QString& pluKey,
 		const QString& pluVer,
 		const QString& pluAuthor,
-		const QString& pluDir);
+		const QString& pluDir,
+		OmniObject::RespondType rt = OmniObject::RespondType::Real);
 
 	void query(const QString& content, QWidget* canvas) override;
 
@@ -150,7 +155,8 @@ public:
 		const QString& pluKey,
 		const QString& pluVer,
 		const QString& pluAuthor,
-		const QString& pluDir);
+		const QString& pluDir,
+		OmniObject::RespondType rt = OmniObject::RespondType::Real);
 
 	void query(const QString& content, QWidget* canvas) override;
 
@@ -173,7 +179,8 @@ public:
 		const QString& pluKey,
 		const QString& pluVer,
 		const QString& pluAuthor,
-		const QString& pluDir);
+		const QString& pluDir,
+		OmniObject::RespondType rt = OmniObject::RespondType::Real);
 
 	void query(const QString& content, QWidget* canvas) override;
 

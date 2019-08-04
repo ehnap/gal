@@ -1,4 +1,4 @@
-#include "omniobject.h"
+﻿#include "omniobject.h"
 #include "pluginmanager.h"
 #include "data.h"
 
@@ -30,8 +30,9 @@ void OmniObject::execEx(const QString& k)
 }
 
 
-OmniObject::RespondType OmniObject::respondType() const
+OmniObject::RespondType OmniObject::respondType(const QString& k/* = ""*/) const
 {
+	Q_UNUSED(k);
 	return m_respondType;
 }
 
@@ -158,6 +159,17 @@ bool OmniPlugin::filter(const QString& k)
 	QString strKey = k.left(k.indexOf(" "));
 	QString strContent = k.mid(k.indexOf(" ") + 1);
 	return m_pPluginManager->isPluginExist(strKey);
+}
+
+OmniObject::RespondType OmniPlugin::respondType(const QString& k/* = ""*/) const
+{
+	QString strKey = k.left(k.indexOf(" "));
+
+	if (!m_pPluginManager->isPluginExist(strKey))
+		return OmniObject::RespondType::Real;
+
+	auto pl = m_pPluginManager->queryPlugin(strKey);
+	return pl->respondType();
 }
 
 PluginManager* OmniPlugin::pluginManager() const

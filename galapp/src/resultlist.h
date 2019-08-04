@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "data.h"
 #include "gallistwidget.h"
