@@ -23,7 +23,7 @@ Features
 Installation
 ------------
 
-Download `gal-xxx.exe` from [releases](https://github.com/ehnap/gal/releases). Latest as of now is [`2.1.3`](https://github.com/ehnap/gal/releases/download/v2.1.3/gal-2.1.3-x64.exe) 
+Download `gal-xxx.exe` from [releases](https://github.com/ehnap/gal/releases). Latest as of now is [`2.1.3`](https://github.com/ehnap/gal/releases/download/v2.1.3/gal-2.1.3-x64.zip) 
 
 
 - Requirements:
